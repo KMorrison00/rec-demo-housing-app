@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def run(cmd) {
+def run_cmd(cmd) {
     if (isUnix()) {
         sh cmd
     } else {
@@ -29,32 +29,32 @@ pipeline {
         stage('Authorize Dev Hub') {
             steps {
                 withCredentials([file(credentialsId: 'salesforce_private_key', variable: 'DEVHUB_PRIVATE_KEY_FILE')]) {
-                    run("sfdx force:auth:jwt:grant --clientid \\${CONSUMER_KEY} --jwtkeyfile \\${DEVHUB_PRIVATE_KEY_FILE} --username \\${USER_NAME} --setdefaultdevhubusername --setalias HubOrg")
+                    run_cmd("sfdx force:auth:jwt:grant --clientid \\${CONSUMER_KEY} --jwtkeyfile \\${DEVHUB_PRIVATE_KEY_FILE} --username \\${USER_NAME} --setdefaultdevhubusername --setalias HubOrg")
                 }
             }
         }
 
         stage('Create Scratch Org') {
             steps {
-                run('sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s')
+                run_cmd('sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s')
             }
         }
 
         stage('Push Source') {
             steps {
-                run('sfdx force:source:push -u YourScratchOrgAlias')
+                run_cmd('sfdx force:source:push -u YourScratchOrgAlias')
             }
         }
 
         stage('Run Tests') {
             steps {
-                run('sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human')
+                run_cmd('sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human')
             }
         }
 
         stage('Delete Scratch Org') {
             steps {
-                run('sfdx force:org:delete -u YourScratchOrgAlias -p')
+                run_cmd('sfdx force:org:delete -u YourScratchOrgAlias -p')
             }
         }
     }
