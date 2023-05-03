@@ -23,8 +23,8 @@ pipeline {
         
         stage('Authorize Dev Hub') {
             steps {
-                withCredentials([file(credentialsId: 'salesforce_private_key', variable: 'DEVHUB_PRIVATE_KEY_FILE')]) {
-                    run_cmd("sfdx force:auth:jwt:grant --clientid \\${env.CONSUMER_KEY} --jwtkeyfile \\${DEVHUB_PRIVATE_KEY_FILE} --username \\${env.SALESFORCE_USERNAME} --setdefaultdevhubusername --setalias HubOrg")
+                withCredentials([file(credentialsId: 'DEVHUB_PRIVATE_KEY_FILE', variable: 'devhub_private_key_file')]) {
+                    run_cmd("sfdx force:auth:jwt:grant --clientid \\${env.CONSUMER_KEY} --jwtkeyfile \\${devhub_private_key_file} --username \\${env.SALESFORCE_USERNAME} --setdefaultdevhubusername --setalias HubOrg")
                 }
             }
         }
