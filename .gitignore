@@ -39,6 +39,9 @@ $RECYCLE.BIN/
 # Local environment variables
 .env
 
+# salesforce and ssl related secrets
+secrets
+
 # Python Salesforce Functions
 **/__pycache__/
 **/.venv/

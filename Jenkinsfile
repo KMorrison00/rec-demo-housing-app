@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def genericSh(cmd) {
+def run(cmd) {
     if (isUnix()) {
         sh cmd
     } else {
@@ -8,8 +8,15 @@ def genericSh(cmd) {
     }
 }
 
+// set credentials for all the CI steps, env variables are set in jenkins ui
+// private key is stored in credentials because its a file
 pipeline { 
     agent any 
+
+    environment {
+        CONSUMER_KEY = credentials('salesforce_consumer_key')
+        USER_NAME = credentials('salesforce_devhub_username')
+    }
 
     stages {
         stage('Checkout') {
@@ -18,28 +25,36 @@ pipeline {
                 git branch: env.BRANCH_NAME, credentialsId: 'Jenkins', url: 'https://github.com/KMorrison00/rec-demo-housing-app'
             }
         }
+        
+        stage('Authorize Dev Hub') {
+            steps {
+                withCredentials([file(credentialsId: 'salesforce_private_key', variable: 'DEVHUB_PRIVATE_KEY_FILE')]) {
+                    run("sfdx force:auth:jwt:grant --clientid \\${CONSUMER_KEY} --jwtkeyfile \\${DEVHUB_PRIVATE_KEY_FILE} --username \\${USER_NAME} --setdefaultdevhubusername --setalias HubOrg")
+                }
+            }
+        }
 
         stage('Create Scratch Org') {
             steps {
-                genericSh('sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s')
+                run('sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s')
             }
         }
 
         stage('Push Source') {
             steps {
-                genericSh('sfdx force:source:push -u YourScratchOrgAlias')
+                run('sfdx force:source:push -u YourScratchOrgAlias')
             }
         }
 
         stage('Run Tests') {
             steps {
-                genericSh('sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human')
+                run('sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human')
             }
         }
 
         stage('Delete Scratch Org') {
             steps {
-                genericSh('sfdx force:org:delete -u YourScratchOrgAlias -p')
+                run('sfdx force:org:delete -u YourScratchOrgAlias -p')
             }
         }
     }
