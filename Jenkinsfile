@@ -13,11 +13,6 @@ def run_cmd(cmd) {
 pipeline { 
     agent any 
 
-    environment {
-        CONSUMER_KEY = "\${credentials('salesforce_consumer_key')}"
-        USER_NAME = "\${credentials('salesforce_devhub_username')}"
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -29,7 +24,7 @@ pipeline {
         stage('Authorize Dev Hub') {
             steps {
                 withCredentials([file(credentialsId: 'salesforce_private_key', variable: 'DEVHUB_PRIVATE_KEY_FILE')]) {
-                    run_cmd("sfdx force:auth:jwt:grant --clientid \\${CONSUMER_KEY} --jwtkeyfile \\${DEVHUB_PRIVATE_KEY_FILE} --username \\${USER_NAME} --setdefaultdevhubusername --setalias HubOrg")
+                    run_cmd("sfdx force:auth:jwt:grant --clientid \\${env.CONSUMER_KEY} --jwtkeyfile \\${DEVHUB_PRIVATE_KEY_FILE} --username \\${env.SALESFORCE_USERNAME} --setdefaultdevhubusername --setalias HubOrg")
                 }
             }
         }
