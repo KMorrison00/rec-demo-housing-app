@@ -7,7 +7,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                git branch: env.BRANCH_NAME, credentialsId: 'Ci-Pipeline', url: 'your-repo-url'
+                git branch: env.BRANCH_NAME, credentialsId: 'Ci-Pipeline', url: 'https://github.com/KMorrison00/rec-demo-housing-app'
             }
         }
 
