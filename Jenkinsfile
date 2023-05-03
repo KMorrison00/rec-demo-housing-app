@@ -13,25 +13,25 @@ pipeline {
 
         stage('Create Scratch Org') {
             steps {
-                sh 'sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s'
+                bat 'sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s'
             }
         }
 
         stage('Push Source') {
             steps {
-                sh 'sfdx force:source:push -u YourScratchOrgAlias'
+                bat 'sfdx force:source:push -u YourScratchOrgAlias'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human'
+                bat 'sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human'
             }
         }
 
         stage('Delete Scratch Org') {
             steps {
-                sh 'sfdx force:org:delete -u YourScratchOrgAlias -p'
+                bat 'sfdx force:org:delete -u YourScratchOrgAlias -p'
             }
         }
     }
