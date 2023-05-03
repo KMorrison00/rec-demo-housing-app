@@ -14,8 +14,8 @@ pipeline {
     agent any 
 
     environment {
-        CONSUMER_KEY = credentials('salesforce_consumer_key')
-        USER_NAME = credentials('salesforce_devhub_username') 
+        CONSUMER_KEY = "\${credentials('salesforce_consumer_key')}"
+        USER_NAME = "\${credentials('salesforce_devhub_username')}"
     }
 
     stages {
