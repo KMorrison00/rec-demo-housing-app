@@ -47,8 +47,6 @@
 //     }
 // }
 
-#!groovy
-
 import groovy.json.JsonSlurperClassic
 
 node {
@@ -65,7 +63,7 @@ node {
 
 
     // -------------------------------------------------------------------------
-    // Check out code from source control.
+    // Check out code from source control based on pushes to pr branches.
     // -------------------------------------------------------------------------
 
     stage('checkout source') {
@@ -76,8 +74,7 @@ node {
     }
 
     // -------------------------------------------------------------------------
-    // Run all the enclosed stages with access to the Salesforce
-    // JWT key credentials.
+    // give all stages/steps environment and credential access
     // -------------------------------------------------------------------------
     
     withEnv(["HOME=${env.WORKSPACE}"]) {
