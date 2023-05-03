@@ -13,25 +13,49 @@ pipeline {
 
         stage('Create Scratch Org') {
             steps {
-                bat 'sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s'
+                script {
+                    if (isUnix()) {
+                        sh 'sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s'
+                    } else {
+                        bat 'sfdx force:org:create -f config/project-scratch-def.json -a YourScratchOrgAlias -s'
+                    }
+                }
             }
         }
 
         stage('Push Source') {
             steps {
-                bat 'sfdx force:source:push -u YourScratchOrgAlias'
+                script {
+                    if (isUnix()) {
+                        sh 'sfdx force:source:push -u YourScratchOrgAlias'
+                    } else {
+                        bat 'sfdx force:source:push -u YourScratchOrgAlias'
+                    }
+                }
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat 'sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human'
+                script {
+                    if (isUnix()) {
+                        sh 'sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human'
+                    } else {
+                        bat 'sfdx force:apex:test:run -u YourScratchOrgAlias -c -r human'
+                    }
+                }
             }
         }
 
         stage('Delete Scratch Org') {
             steps {
-                bat 'sfdx force:org:delete -u YourScratchOrgAlias -p'
+                script {
+                    if (isUnix()) {
+                        sh 'sfdx force:org:delete -u YourScratchOrgAlias -p'
+                    } else {
+                        bat 'sfdx force:org:delete -u YourScratchOrgAlias -p'
+                    }
+                }
             }
         }
     }
