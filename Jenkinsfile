@@ -16,9 +16,9 @@ pipeline {
     agent any
 
     environment {
-        SF_CONSUMER_KEY="${env.SF_CONSUMER_KEY}"
-        SF_USERNAME="${env.SF_USERNAME}"
-        TEST_LEVEL='RunLocalTests'
+        SF_CONSUMER_KEY="${env.SF_CONSUMER_KEY2}"
+        SF_USERNAME="${env.SF_USERNAME2}"
+        TEST_LEVEL='RunAllTestsInOrg'
         PACKAGE_NAME='test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         toolbelt = tool 'toolbelt'
@@ -87,7 +87,6 @@ pipeline {
                     }
                 }
             }
-            
         }
 
         // Delete test scratch org.
@@ -188,6 +187,11 @@ pipeline {
         //         }
         //     }
         // }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: '*.xml', onlyIfSuccessful: true
+        }
     }
 }
 
