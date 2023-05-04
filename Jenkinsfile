@@ -81,17 +81,17 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --outputdir ${env.WORKSPACE}")
+                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat human --codecoverage --testlevel ${TEST_LEVEL} --outputdir test_results")
+                    println(rc)
+                    rc = command("${toolbelt}/sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${rc}")
+                    println(rc)
                     if (rc != 0) {
                         error 'Salesforce unit test run in test scratch org failed.'
                     }
-                    archiveArtifacts artifacts: "*"
+                    archiveArtifacts artifacts: "test_results/*"
                 }
             } 
         }
-        
-        
-
         // Delete test scratch org.
         stage('Delete Scratch Org') {
             steps {
@@ -103,6 +103,21 @@ pipeline {
                 }
             }
         }
+    } 
+    post {
+        failure {
+            script {
+                rc = command("${toolbelt}/sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
+                if (rc != 0) {
+                    error 'Salesforce test scratch org deletion failed.'
+                }
+            }
+        }
+    }
+}
+        
+
+        
 
         // Create package version.
         // stage('Create Package Version') {
@@ -190,7 +205,7 @@ pipeline {
         //         }
         //     }
         // }
-    }
+    // }
     
-}
+// }
 
