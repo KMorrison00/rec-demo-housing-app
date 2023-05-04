@@ -44,7 +44,11 @@ pipeline {
                             error 'Salesforce dev hub org authorization failed.'
                         }
                         // temporary workaround pending resolution to this issue https://github.com/forcedotcom/cli/issues/81
-                        command("mv ${server_key_file} ./server.key")
+                        if (isUnix()) {
+                            command("cp ${server_key_file} ./server.key")
+                        } else {
+                            command("copy ${server_key_file} ./server.key")
+                        }
                     }
                 }
             }
