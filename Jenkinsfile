@@ -54,7 +54,7 @@ pipeline {
         }
 
         // Display test scratch org info.
-        stage('Display Test Scratch Org') {
+        stage('Display Scratch Org') {
             steps {
                 script {
                     rc = command("${toolbelt}/sfdx force:org:display --targetusername ${ALIAS}")
@@ -66,7 +66,7 @@ pipeline {
         }
 
         // Push source to test scratch org.
-        stage('Push To Test Scratch Org') {
+        stage('Push To Scratch Org') {
             steps {
                 script {
                     rc = command("${toolbelt}/sfdx force:source:push --targetusername ${ALIAS}")
@@ -78,10 +78,10 @@ pipeline {
         }
 
         // Run unit tests in test scratch org.
-        stage('Run Tests In Test Scratch Org') {
+        stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --wait 10 --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --outputdir ${env.WORKSPACE}")
+                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --outputdir ${env.WORKSPACE}")
                     if (rc != 0) {
                         error 'Salesforce unit test run in test scratch org failed.'
                     }
@@ -93,7 +93,7 @@ pipeline {
         
 
         // Delete test scratch org.
-        stage('Delete Test Scratch Org') {
+        stage('Delete Scratch Org') {
             steps {
                 script {
                     rc = command("${toolbelt}/sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
