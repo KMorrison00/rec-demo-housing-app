@@ -81,11 +81,11 @@ pipeline {
         stage('Run Tests In Test Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --wait 10 --resultformat junit --codecoverage --testlevel ${TEST_LEVEL} --outputdir ./")
+                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --wait 10 --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --outputdir ${env.WORKSPACE}")
                     if (rc != 0) {
                         error 'Salesforce unit test run in test scratch org failed.'
                     }
-                    archiveArtifacts artifacts: './*.xml'
+                    archiveArtifacts artifacts: "${env.WORKSPACE}/*"
                 }
             } 
         }
