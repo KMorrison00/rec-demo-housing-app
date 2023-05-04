@@ -40,11 +40,13 @@ pipeline {
                 script {
                     // command("rm -rf $HOME/.sfdx")
                     withCredentials([file(credentialsId: env.SERVER_KEY_CREDENTALS_ID, variable: 'server_key_file')]) {
-                        // try logging out prio to reset credentials?
-                        command("${toolbelt}/sfdx force:auth:logout --noprompt --username ${SF_USERNAME}")
                         rc = command("${toolbelt}/sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file --set-default-dev-hub --alias HubOrg")
                         if (rc != 0) {
                             error 'Salesforce dev hub org authorization failed.'
+                        }
+                        rc = command("${toolbelt}/sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1")
+                        if (rc != 0) {
+                            error 'Salesforce test scratch org creation failed.'
                         }
                     }
                 }
@@ -52,16 +54,13 @@ pipeline {
         }
 
         // Create new scratch org to test your code.
-        stage('Create Test Scratch Org') {
-            steps {
-                script {
-                    rc = command("${toolbelt}/sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ciorg --wait 10 --durationdays 1")
-                    if (rc != 0) {
-                        error 'Salesforce test scratch org creation failed.'
-                    }
-                }
-            }
-        }
+        // stage('Create Test Scratch Org') {
+        //     steps {
+        //         script {
+                    
+        //         }
+        //     }
+        // }
 
         // Display test scratch org info.
         stage('Display Test Scratch Org') {
