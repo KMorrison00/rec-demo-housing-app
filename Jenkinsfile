@@ -10,6 +10,14 @@ def command(script) {
     }
 }
 
+def command_stdout(script) {
+    if (isUnix()) {
+        return sh(returnStdout: true, script: script);
+    } else {
+        return bat(returnStdout: true, script: script);
+    }
+}
+
 // set credentials for all the CI steps, env variables are set in jenkins ui
 // private key is stored in credentials because its a file
 pipeline {
@@ -40,14 +48,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: env.SERVER_KEY_CREDENTALS_ID, variable: 'server_key_file')]) {
-                        rc = command("${toolbelt}/sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file --set-default-dev-hub --alias HubOrg")
-                        if (rc != 0) {
-                            error 'Salesforce dev hub org authorization failed.'
-                        }
-                        rc = command("${toolbelt}/sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ${ALIAS} --wait 10 --durationdays 1")
-                        if (rc != 0) {
-                            error 'Salesforce test scratch org creation failed.'
-                        }
+                        command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file --set-default-dev-hub --alias HubOrg")
+                        command("${toolbelt}/sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ${ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
@@ -57,10 +59,7 @@ pipeline {
         stage('Display Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:org:display --targetusername ${ALIAS}")
-                    if (rc != 0) {
-                        error 'Salesforce test scratch org display failed.'
-                    }
+                    command("${toolbelt}/sfdx force:org:display --targetusername ${ALIAS}")
                 }
             }
         }
@@ -69,10 +68,7 @@ pipeline {
         stage('Push To Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:source:push --targetusername ${ALIAS}")
-                    if (rc != 0) {
-                        error 'Salesforce push to test scratch org failed.'
-                    }
+                    command("${toolbelt}/sfdx force:source:push --targetusername ${ALIAS}")
                 }
             }
         }
@@ -81,13 +77,10 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat human --codecoverage --testlevel ${TEST_LEVEL} --outputdir test_results")
-                    println(rc)
-                    rc = command("${toolbelt}/sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${rc}")
-                    println(rc)
-                    if (rc != 0) {
-                        error 'Salesforce unit test run in test scratch org failed.'
-                    }
+                    test_output = command_stdout("${toolbelt}/sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    test_json = readJSON text: test_output
+                    test_run_id = test_json.result.testRunId
+                    command("${toolbelt}/sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
                 }
             } 
@@ -96,10 +89,7 @@ pipeline {
         stage('Delete Scratch Org') {
             steps {
                 script {
-                    rc = command("${toolbelt}/sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-                    if (rc != 0) {
-                        error 'Salesforce test scratch org deletion failed.'
-                    }
+                    command("${toolbelt}/sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
                 }
             }
         }
@@ -107,10 +97,7 @@ pipeline {
     post {
         failure {
             script {
-                rc = command("${toolbelt}/sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-                if (rc != 0) {
-                    error 'Salesforce test scratch org deletion failed.'
-                }
+                command("${toolbelt}/sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
             }
         }
     }
@@ -150,10 +137,7 @@ pipeline {
         // stage('Create Package Install Scratch Org') {
         //     steps {
         //         script {
-        //             rc = command("${toolbelt}/sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias installorg --wait 10 --durationdays 1")
-        //             if (rc != 0) {
-        //                 error 'Salesforce package install scratch org creation failed.'
-        //             }
+        //             command("${toolbelt}/sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias installorg --wait 10 --durationdays 1")
         //         }
         //     }
         // }
@@ -162,10 +146,7 @@ pipeline {
         // stage('Display Install Scratch Org') {
         //     steps {
         //         script {
-        //             rc = command("${toolbelt}/sfdx force:org:display --targetusername installorg")
-        //             if (rc != 0) {
-        //                 error 'Salesforce install scratch org display failed.'
-        //             }
+        //             command("${toolbelt}/sfdx force:org:display --targetusername installorg")
         //         }
         //     }
         // }
@@ -174,10 +155,7 @@ pipeline {
         // stage('Install Package In Scratch Org') {
         //     steps {
         //         script {
-        //             rc = command("${toolbelt}/sfdx force:package:install --package ${PACKAGE_VERSION} --targetusername installorg --wait 10")
-        //             if (rc != 0) {
-        //                 error 'Salesforce package install failed.'
-        //             }
+        //             command("${toolbelt}/sfdx force:package:install --package ${PACKAGE_VERSION} --targetusername installorg --wait 10")
         //         }
         //     }
         // }
@@ -186,10 +164,7 @@ pipeline {
         // stage('Run Tests In Package Install Scratch Org') {
         //     steps {
         //         script {
-        //             rc = command("${toolbelt}/sfdx force:apex:test:run --targetusername installorg --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
-        //             if (rc != 0) {
-        //                 error 'Salesforce unit test run in pacakge install scratch org failed.'
-        //             }
+        //             command("${toolbelt}/sfdx force:apex:test:run --targetusername installorg --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
         //         }
         //     }
         // }
@@ -198,10 +173,7 @@ pipeline {
         // stage('Delete Package Install Scratch Org') {
         //     steps {
         //         script {
-        //             rc = command("${toolbelt}/sfdx force:org:delete --targetusername installorg --noprompt")
-        //             if (rc != 0) {
-        //                 error 'Salesforce package install scratch org deletion failed.'
-        //             }
+        //             command("${toolbelt}/sfdx force:org:delete --targetusername installorg --noprompt")
         //         }
         //     }
         // }
