@@ -44,7 +44,7 @@ pipeline {
                         if (rc != 0) {
                             error 'Salesforce dev hub org authorization failed.'
                         }
-                        rc = command("${toolbelt}/sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --alias ${ALIAS} --wait 10 --durationdays 1")
+                        rc = command("${toolbelt}/sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ${ALIAS} --wait 10 --durationdays 1")
                         if (rc != 0) {
                             error 'Salesforce test scratch org creation failed.'
                         }
