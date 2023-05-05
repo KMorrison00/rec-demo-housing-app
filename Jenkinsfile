@@ -118,8 +118,7 @@ pipeline {
 
                     def testRunId = extractTestRunId(rtnMsg)
                     println("Test Run ID: ${testRunId}")
-                    String reportMsg = command_stdout("sfdx force:apex:test:report --targetusername ${ALIAS}" +
-                        " --resultformat junit --codecoverage --testrunid ${testRunId} ${filePipe} results.xml")
+                    String reportMsg = command_stdout("sfdx force:apex:test:report --testrunid ${testRunId} ${filePipe} results.xml")
                     println reportMsg
                     archiveArtifacts artifacts: 'results.xml'
                     junit 'results.xml'
