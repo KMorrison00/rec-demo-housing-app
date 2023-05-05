@@ -116,9 +116,9 @@ pipeline {
 
                     command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
                         "--code-coverage --result-format junit --test-level ${TEST_LEVEL} " +
-                        "--wait -1 ${filePipe} test_results/results.xml")
+                        "--wait -1 --output-dir test_results ${filePipe} test_results/results.xml")
 
-                    archiveArtifacts artifacts: 'test_results/results.xml'
+                    archiveArtifacts artifacts: 'test_results/*.xml'
                     // cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
                 }
             }
