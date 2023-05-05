@@ -72,10 +72,10 @@ pipeline {
                 script {
                     def test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
                     println(test_output)
-                    def jsonSlurp = new JsonSlurper()
-                    def test_json = jsonSlurp.parseText(testRunOutput)
-                    println(test_json)
-                    def test_run_id = testRunJson.result.testRunId
+                    test_output_arr = test_output.split(' ')
+                    println(test_output_arr)
+                    def test_run_id = test_output_arr[test_output_arr.indexOf('-i') + 1]
+                    println(test_run_id)
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
                 }
