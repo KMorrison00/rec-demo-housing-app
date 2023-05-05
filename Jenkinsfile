@@ -22,7 +22,6 @@ pipeline {
         TEST_LEVEL='RunAllTestsInOrg'
         PACKAGE_NAME='test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
-        toolbelt = tool 'toolbelt'
         ALIAS = 'ciorg'
     }
 
@@ -70,15 +69,15 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    def rtn_msg = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
-                    println(rtn_msg)
+                    def rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    println(rtnMsg)
                     // looks for the -i output in the return string indicating the testrunid and then grabs the next non-whitespace arg 
                     // which is the testrunid
                     def pattern = /-i\s+(\S+)/
-                    def matcher = (rtn_msg =~ pattern)
+                    def matcher = (rtnMsg =~ pattern)
                     def testRunId = matcher[0][1]
-                    println "Test Run ID: ${testRunId}"
-                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
+                    println("Test Run ID: ${testRunId}")
+                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${testRunId} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
                 }
             } 
