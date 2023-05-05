@@ -42,7 +42,7 @@ pipeline {
                 script {
                     withCredentials([file(credentialsId: env.SERVER_KEY_CREDENTALS_ID, variable: 'server_key_file')]) {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file --set-default-dev-hub --alias HubOrg")
-                        command("sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ${ALIAS} --wait 10 --durationdays 1")
+                        // command("sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ${ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
