@@ -114,7 +114,7 @@ pipeline {
                     }
                     command('if not exist test_results mkdir test_results')
                     command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} ${outPipe} test_results/results.xml")
+                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} ${outPipe} results.xml")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
                     // println rtnMsg
@@ -122,7 +122,8 @@ pipeline {
                     // println("Test Run ID: ${testRunId}")
                     // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                     //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    junit 'test_results/results.xml'
+                    archiveArtifacts artifacts: 'results.xml'
+                    junit 'results.xml'
                 }
             }
         }
