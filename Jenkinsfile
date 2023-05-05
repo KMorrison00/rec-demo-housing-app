@@ -108,9 +108,13 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
+                    String outPipe = '^>'
+                    if (isUnix()) {
+                        outPipe = '>'
+                    }
                     command('if not exist test_results mkdir test_results')
-                    String rtnMsg = command_stdout("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} --wait 30")
+                    command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} ${outPipe} test_results/results.xml")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
                     // println rtnMsg
@@ -118,7 +122,7 @@ pipeline {
                     // println("Test Run ID: ${testRunId}")
                     // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                     //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    junit rtnMsg
+                    junit 'test_results/results.xml'
                 }
             }
         }
