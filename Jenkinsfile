@@ -84,6 +84,7 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
+                    command('mkdir -p test_results')
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--codecoverage --resultformat junit --testlevel ${TEST_LEVEL} --output-dir test_results --wait 100")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
