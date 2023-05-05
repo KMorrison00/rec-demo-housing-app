@@ -113,12 +113,13 @@ pipeline {
                         filePipe = '>'
                     }
                     command('if not exist test_results mkdir test_results')
-                    String rtnMsg = command_stdout("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    String rtnMsg = command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
                     "--code-coverage --result-format junit --test-level ${TEST_LEVEL}")
 
                     def testRunId = extractTestRunId(rtnMsg)
                     println("Test Run ID: ${testRunId}")
-                    String reportMsg = command_stdout("sfdx force:apex:test:report --testrunid ${testRunId} ${filePipe} results.xml")
+                    String reportMsg = command_stdout("sfdx force:apex:test:report --target-org ${ALIAS}" +
+                        " --resultformat junit --code-coverage --test-run-id ${testRunId} ${filePipe} results.xml")
                     println reportMsg
                     archiveArtifacts artifacts: 'results.xml'
                     junit 'results.xml'
