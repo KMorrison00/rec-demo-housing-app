@@ -10,17 +10,17 @@ String command(String script) {
 }
 
 // helper fucntion to extract strings from stdOut
-@NonCPS
-String extractTestRunId(String input) {
-    // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
-    // which is -i testrunid
-    String pattern = /-i\s+(\S+)/
-    Matcher matcher = (input =~ pattern)
-    if (matcher.find()) {
-        return matcher.group(1)
-    }
-    return ''
-}
+// @NonCPS
+// String extractTestRunId(String input) {
+//     // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
+//     // which is -i testrunid
+//     String pattern = /-i\s+(\S+)/
+//     Matcher matcher = (input =~ pattern)
+//     if (matcher.find()) {
+//         return matcher.group(1)
+//     }
+//     return ''
+// }
 
 // set credentials for all the CI steps, env variables are set in jenkins ui
 // private key is stored in credentials because its a file
@@ -86,9 +86,10 @@ pipeline {
             steps {
                 script {
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--codecoverage --testlevel ${TEST_LEVEL} --wait 10")
-                    println(rtnMsg)
-                    String testRunId = extractTestRunId(rtnMsg)
+                    "--codecoverage --resultformat json --testlevel ${TEST_LEVEL} --wait 10")
+                    def jsonSlurp = new groovy.json.JsonSlurp()
+                    def testRunJson = jsonSlurp.parseText(rtnMsg)
+                    def testRunId = testRunJson.result.testRunId
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                         "--codecoverage --testrunid ${testRunId} --outputdir test_results")
