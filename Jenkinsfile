@@ -48,31 +48,33 @@ pipeline {
             }
         }
 
-        // Display test scratch org info.
-        stage('Display Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:org:display --targetusername ${ALIAS}")
-                }
-            }
-        }
+        // // Display test scratch org info.
+        // stage('Display Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:org:display --targetusername ${ALIAS}")
+        //         }
+        //     }
+        // }
 
-        // Push source to test scratch org.
-        stage('Push To Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:source:push --targetusername ${ALIAS}")
-                }
-            }
-        }
+        // // Push source to test scratch org.
+        // stage('Push To Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:source:push --targetusername ${ALIAS}")
+        //         }
+        //     }
+        // }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
                     def test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    println(test_output)
                     def jsonSlurp = new JsonSlurper()
                     def test_json = jsonSlurp.parseText(testRunOutput)
+                    println(test_json)
                     def test_run_id = testRunJson.result.testRunId
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
