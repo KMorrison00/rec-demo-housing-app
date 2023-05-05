@@ -9,6 +9,19 @@ String command(String script) {
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
 
+// helper fucntion to extract strings from stdOut
+@NonCPS
+String extractTestRunId(String input) {
+    // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
+    // which is -i testrunid
+    String pattern = /-i\s+(\S+)/
+    Matcher matcher = (input =~ pattern)
+    if (matcher.find()) {
+        return matcher.group(1)
+    }
+    return ''
+}
+
 // set credentials for all the CI steps, env variables are set in jenkins ui
 // private key is stored in credentials because its a file
 pipeline {
@@ -75,17 +88,7 @@ pipeline {
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS}" +
                         " --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
                     println(rtnMsg)
-                    // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
-                    // which is the testrunid
-                    String pattern = /-i\s+(\S+)/
-                    Matcher matcher = (rtnMsg =~ pattern)
-                    String match = ''
-                    if (matcher.find()) {
-                        match = matcher.group(0) // Store the matched string in a serializable object
-                    }
-                    println match
-                    println match.split(' ')[1]
-                    String testRunId = match.split(' ')[1]
+                    String testRunId = extractTestRunId(rtnMsg)
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                         "--codecoverage --testrunid ${testRunId} --outputdir test_results")
