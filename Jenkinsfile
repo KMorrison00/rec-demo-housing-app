@@ -85,7 +85,7 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--codecoverage --testlevel ${TEST_LEVEL} --wait 10")
                     println(rtnMsg)
                     String testRunId = extractTestRunId(rtnMsg)
