@@ -78,7 +78,7 @@ pipeline {
                     if (matcher.find()) {
                         def match = matcher.group(0) // Store the matched string in a serializable object
                     }
-                    def testRunId = match[1]
+                    def testRunId = match
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${testRunId} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
