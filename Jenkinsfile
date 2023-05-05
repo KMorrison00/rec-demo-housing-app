@@ -47,13 +47,21 @@ pipeline {
             }
         }
         stage('Run Static Code Analysis') {
-            // Install PMD and run static code analysis, saving the results as an XML file
-            command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+            steps {
+                script {
+                    // Install PMD and run static code analysis, saving the results as an XML file
+                    command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+                }
+            }
         }
 
         stage('Publish Static Code Analysis Results') {
-            // Publish the PMD static code analysis results in Jenkins
-            recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
+            steps {
+                script {
+                    // Publish the PMD static code analysis results in Jenkins
+                    recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
+                }
+            }
         }
 
         // Authorize the Dev Hub org with JWT key and give it an alias.
