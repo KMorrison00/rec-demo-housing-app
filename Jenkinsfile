@@ -3,7 +3,6 @@ import java.util.regex.Matcher
 
 // helper function to be OS agnostic
 String command(String script) {
-    /* groovylint-disable-next-line UnnecessaryGetter */
     if (isUnix()) {
         return sh(returnStdout: true, script: script)
     }
@@ -85,7 +84,8 @@ pipeline {
                         match = matcher.group(0) // Store the matched string in a serializable object
                     }
                     println match
-                    String testRunId = match[1]
+                    println match.split(' ')[1]
+                    String testRunId = match.split(' ')[1]
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                         "--codecoverage --testrunid ${testRunId} --outputdir test_results")
