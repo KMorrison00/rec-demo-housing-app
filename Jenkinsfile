@@ -115,8 +115,8 @@ pipeline {
                     command('if not exist test_results mkdir test_results')
 
                     command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
-                        "--code-coverage --result-format json --test-level ${TEST_LEVEL} " +
-                        "--wait 10 ${filePipe} test_results/results.json")
+                        "--code-coverage --result-format junit --test-level ${TEST_LEVEL} " +
+                        "--wait -1 ${filePipe} test_results/results.xml")
 
                     archiveArtifacts artifacts: 'test_results/results.json'
                     cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
