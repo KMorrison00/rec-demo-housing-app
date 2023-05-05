@@ -86,13 +86,13 @@ pipeline {
             steps {
                 script {
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS}" +
-                        " --resultformat json --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
+                        " --resultformat junit --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
                     println(rtnMsg)
-                    String testRunId = extractTestRunId(rtnMsg)
-                    println("Test Run ID: ${testRunId}")
-                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
-                        "--codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    archiveArtifacts artifacts: 'test_results/*'
+                    // String testRunId = extractTestRunId(rtnMsg)
+                    // println("Test Run ID: ${testRunId}")
+                    // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
+                    //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
+                    // archiveArtifacts artifacts: 'test_results/*'
                 }
             }
         }
