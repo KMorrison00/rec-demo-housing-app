@@ -82,9 +82,10 @@ pipeline {
                     Matcher matcher = (rtnMsg =~ pattern)
                     String match = ''
                     if (matcher.find()) {
-                        match = matcher.group(0)[1] // Store the matched string in a serializable object
+                        match = matcher.group(0) // Store the matched string in a serializable object
                     }
-                    String testRunId = match
+                    println match
+                    String testRunId = match[1]
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                         "--codecoverage --testrunid ${testRunId} --outputdir test_results")
