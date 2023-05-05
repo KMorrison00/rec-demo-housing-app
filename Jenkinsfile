@@ -75,7 +75,10 @@ pipeline {
                     // which is the testrunid
                     def pattern = /-i\s+(\S+)/
                     def matcher = (rtnMsg =~ pattern)
-                    def testRunId = matcher[0][1]
+                    if (matcher.find()) {
+                        def match = matcher.group(0) // Store the matched string in a serializable object
+                    }
+                    def testRunId = match[1]
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${testRunId} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
