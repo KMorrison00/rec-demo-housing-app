@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-import groovy.json.JsonSlurperClassic
+import groovy.json.JsonSlurper
 
 // helper function to be OS agnostic
 def command(script) {
@@ -71,8 +71,8 @@ pipeline {
             steps {
                 script {
                     def test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    def jsonSlurp = new JsonSlurper()
                     def test_json = jsonSlurp.parseText(testRunOutput)
-                    def jsonSlurp = new JsonSlurperClassic()
                     def test_run_id = testRunJson.result.testRunId
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
@@ -80,21 +80,21 @@ pipeline {
             } 
         }
         // Delete test scratch org.
-        stage('Delete Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-                }
-            }
-        }
+        // stage('Delete Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
+        //         }
+        //     }
+        // }
     } 
-    post {
-        failure {
-            script {
-                command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-            }
-        }
-    }
+    // post {
+    //     failure {
+    //         script {
+    //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
+    //         }
+    //     }
+    // }
 }
         
 
