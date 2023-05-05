@@ -114,7 +114,7 @@ pipeline {
                     }
                     command('if not exist test_results mkdir test_results')
                     String rtnMsg = command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
-                    "--code-coverage --result-format human --test-level ${TEST_LEVEL} --wait 10")
+                    "--code-coverage --result-format json --test-level ${TEST_LEVEL} --wait 10")
                     println rtnMsg
                     // def testRunId = extractTestRunId(rtnMsg)
                     // println("Test Run ID: ${testRunId}")
