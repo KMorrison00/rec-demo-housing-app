@@ -30,7 +30,7 @@ pipeline {
     environment {
         SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
         SF_USERNAME = "${env.SF_USERNAME}"
-        TEST_LEVEL = 'RunAllTestsInOrg'
+        TEST_LEVEL = 'RunLocalTests'
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
@@ -85,14 +85,15 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS}" +
-                        " --resultformat junit --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
-                    println(rtnMsg)
+                    command("sfdx force:apex:test:run --targetusername ${ALIAS}" +
+                    " --resultformat junit --codecoverage --testlevel ${TEST_LEVEL} --wait 30 --outputdir test_result")
+                    // println(rtnMsg)
                     // String testRunId = extractTestRunId(rtnMsg)
                     // println("Test Run ID: ${testRunId}")
                     // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                     //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    // archiveArtifacts artifacts: 'test_results/*'
+                    archiveArtifacts artifacts: '*'
+                    archiveArtifacts artifacts: 'test_results/*'
                 }
             }
         }
