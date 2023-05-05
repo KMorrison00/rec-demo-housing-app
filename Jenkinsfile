@@ -86,7 +86,7 @@ pipeline {
                 script {
                     command('mkdir -p test_results')
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--codecoverage --resultformat junit --testlevel ${TEST_LEVEL} --output-dir test_results --wait 100")
+                    "--code-coverage --result-format junit --testlevel ${TEST_LEVEL} --wait 100 --output-dir test_results")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
                     println rtnMsg
