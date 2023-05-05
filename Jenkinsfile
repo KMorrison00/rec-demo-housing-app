@@ -16,17 +16,17 @@ String command_stdout(String script) {
 }
 
 // helper fucntion to extract strings from stdOut
-// @NonCPS
-// String extractTestRunId(String input) {
-//     // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
-//     // which is -i testrunid
-//     String pattern = /-i\s+(\S+)/
-//     Matcher matcher = (input =~ pattern)
-//     if (matcher.find()) {
-//         return matcher.group(1)
-//     }
-//     return ''
-// }
+@NonCPS
+String extractTestRunId(String input) {
+    // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
+    // which is -i testrunid
+    String pattern = /-i\s+(\S+)/
+    Matcher matcher = (input =~ pattern)
+    if (matcher.find()) {
+        return matcher.group(1)
+    }
+    return ''
+}
 
 // set credentials for all the CI steps, env variables are set in jenkins ui
 // private key is stored in credentials because its a file
@@ -108,20 +108,19 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    String outPipe = '^>'
+                    String filePipe = '^>'
                     if (isUnix()) {
-                        outPipe = '>'
+                        filePipe = '>'
                     }
                     command('if not exist test_results mkdir test_results')
-                    command_stdout("sfdx force:apex:test:run --targetusername ${ALIAS} --synchronous " +
-                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} ${outPipe} results.xml")
-                    // def jsonSlurp = new groovy.json.JsonSlurper()
-                    // def testRunJson = jsonSlurp.parseText(rtnMsg)
-                    // println rtnMsg
-                    // def testRunId = testRunJson.result.testRunId
-                    // println("Test Run ID: ${testRunId}")
-                    // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
-                    //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
+                    String rtnMsg = command_stdout("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL}")
+
+                    def testRunId = extractTestRunId(rtnMsg)
+                    println("Test Run ID: ${testRunId}")
+                    String reportMsg = command_stdout("sfdx force:apex:test:report --targetusername ${ALIAS}" +
+                        " --resultformat junit --codecoverage --testrunid ${testRunId} ${filePipe} results.xml")
+                    println reportMsg
                     archiveArtifacts artifacts: 'results.xml'
                     junit 'results.xml'
                 }
