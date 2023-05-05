@@ -5,7 +5,7 @@ import java.util.regex.Matcher
 
 // helper function to be OS agnostic
 String command(String script) {
-    if (isUnix()) {
+    if (unix()) {
         return sh(returnStdout: true, script: script)
     }
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
@@ -79,7 +79,7 @@ pipeline {
                     println(rtnMsg)
                     // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
                     // which is the testrunid
-                    Pattern pattern = /-i\s+(\S+)/
+                    String pattern = /-i\s+(\S+)/
                     Matcher matcher = (rtnMsg =~ pattern)
                     String match = ''
                     if (matcher.find()) {
