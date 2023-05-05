@@ -17,8 +17,8 @@ pipeline {
     agent any
 
     environment {
-        SF_CONSUMER_KEY="${env.SF_CONSUMER_KEY2}"
-        SF_USERNAME="${env.SF_USERNAME2}"
+        SF_CONSUMER_KEY="${env.SF_CONSUMER_KEY}"
+        SF_USERNAME="${env.SF_USERNAME}"
         TEST_LEVEL='RunAllTestsInOrg'
         PACKAGE_NAME='test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
