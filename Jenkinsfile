@@ -86,7 +86,7 @@ pipeline {
             steps {
                 script {
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS}" +
-                        " --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                        " --resultformat json --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
                     println(rtnMsg)
                     String testRunId = extractTestRunId(rtnMsg)
                     println("Test Run ID: ${testRunId}")
