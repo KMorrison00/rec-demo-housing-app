@@ -85,8 +85,8 @@ pipeline {
             steps {
                 script {
                     command('if not exist test_results mkdir test_results')
-                    String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--code-coverage --result-format junit --testlevel ${TEST_LEVEL} --wait 100 --output-dir test_results")
+                    String rtnMsg = command("sfdx force:apex:test:run --synchronous --targetusername ${ALIAS} " +
+                    "--code-coverage --result-format junit --testlevel ${TEST_LEVEL} --wait 30 --outputdir test_results")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
                     println rtnMsg
