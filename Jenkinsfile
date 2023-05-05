@@ -1,14 +1,14 @@
 #!/usr/bin/env groovy
-import groovy.json.JsonSlurper
+
+import java.util.regex.Pattern
+import java.util.regex.Matcher
 
 // helper function to be OS agnostic
-def command(script) {
+String command(String script) {
     if (isUnix()) {
-        return sh(returnStdout: true, script: script);
-    } else {
-        def output = bat(returnStdout: true, script: script).trim()
-        return output.readLines().drop(1).join(" ");
+        return sh(returnStdout: true, script: script)
     }
+    return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
 
 // set credentials for all the CI steps, env variables are set in jenkins ui
@@ -17,10 +17,10 @@ pipeline {
     agent any
 
     environment {
-        SF_CONSUMER_KEY="${env.SF_CONSUMER_KEY}"
-        SF_USERNAME="${env.SF_USERNAME}"
-        TEST_LEVEL='RunAllTestsInOrg'
-        PACKAGE_NAME='test_package_1'
+        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
+        SF_USERNAME = "${env.SF_USERNAME}"
+        TEST_LEVEL = 'RunAllTestsInOrg'
+        PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
     }
@@ -31,7 +31,8 @@ pipeline {
         stage('Checkout Source') {
             steps {
                 checkout scm
-                git branch: env.BRANCH_NAME, credentialsId: 'Jenkins', url: 'https://github.com/KMorrison00/rec-demo-housing-app'
+                git branch: env.BRANCH_NAME, credentialsId: 'Jenkins',
+                 url: 'https://github.com/KMorrison00/rec-demo-housing-app'
             }
         }
 
@@ -40,8 +41,12 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: env.SERVER_KEY_CREDENTALS_ID, variable: 'server_key_file')]) {
-                        command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file --set-default-dev-hub --alias HubOrg")
-                        // command("sfdx force:org:create --target-dev-hub HubOrg  --definitionfile config/project-scratch-def.json --setalias ${ALIAS} --wait 10 --durationdays 1")
+                        command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
+                            " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file" +
+                            ' --set-default-dev-hub --alias HubOrg')
+                    // command("sfdx force:org:create --target-dev-hub HubOrg  "+
+                    //          "--definitionfile config/project-scratch-def.json "+
+                    //          "--setalias ${ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
@@ -69,54 +74,54 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    def rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS}" +
+                        " --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
                     println(rtnMsg)
-                    // looks for the -i output in the return string indicating the testrunid and then grabs the next non-whitespace arg 
+                    // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
                     // which is the testrunid
-                    def pattern = /-i\s+(\S+)/
-                    def matcher = (rtnMsg =~ pattern)
-                    def match
+                    Pattern pattern = /-i\s+(\S+)/
+                    Matcher matcher = (rtnMsg =~ pattern)
+                    String match = ''
                     if (matcher.find()) {
-                        match = matcher.group(0) // Store the matched string in a serializable object
+                        match = matcher.group(0)[1] // Store the matched string in a serializable object
                     }
-                    def testRunId = match
+                    String testRunId = match
                     println("Test Run ID: ${testRunId}")
-                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    archiveArtifacts artifacts: "test_results/*"
+                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
+                        "--codecoverage --testrunid ${testRunId} --outputdir test_results")
+                    archiveArtifacts artifacts: 'test_results/*'
                 }
-            } 
+            }
         }
-        // Delete test scratch org.
-        // stage('Delete Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-        //         }
-        //     }
-        // }
-    } 
-    // post {
-    //     failure {
+    // Delete test scratch org.
+    // stage('Delete Scratch Org') {
+    //     steps {
     //         script {
     //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
     //         }
     //     }
     // }
+    }
+// post {
+//     failure {
+//         script {
+//             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
+//         }
+//     }
+// }
 }
-        
-
-        
 
         // Create package version.
         // stage('Create Package Version') {
         //     steps {
         //         script {
-        //             output = command("sfdx force:package:version:create --package ${PACKAGE_NAME} --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg")
+        //             output = command("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
+        //                              " --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg")
 
         //             // Wait 5 minutes for package replication.
         //             sleep 300
 
-        //             def jsonSlurper = new JsonSlurperClassic()
+        //             def jsonSlurper = new groovy.json.JsonSlurper
         //             def response = jsonSlurper.parseText(output)
 
         //             PACKAGE_VERSION = response.result.SubscriberPackageVersionId
@@ -126,14 +131,15 @@ pipeline {
         //             echo ${PACKAGE_VERSION}
         //         }
         //     }
-            
         // }
 
         // // Create new scratch org to install package to.
         // stage('Create Package Install Scratch Org') {
         //     steps {
         //         script {
-        //             command("sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername --definitionfile config/project-scratch-def.json --setalias installorg --wait 10 --durationdays 1")
+        //             command("sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername"+
+        //                  " --definitionfile config/project-scratch-def.json "+
+        //                  "--setalias installorg --wait 10 --durationdays 1")
         //         }
         //     }
         // }
@@ -151,7 +157,8 @@ pipeline {
         // stage('Install Package In Scratch Org') {
         //     steps {
         //         script {
-        //             command("sfdx force:package:install --package ${PACKAGE_VERSION} --targetusername installorg --wait 10")
+        //             command("sfdx force:package:install --package ${PACKAGE_VERSION}"+
+        //                      ' --targetusername installorg --wait 10')
         //         }
         //     }
         // }
@@ -160,7 +167,8 @@ pipeline {
         // stage('Run Tests In Package Install Scratch Org') {
         //     steps {
         //         script {
-        //             command("sfdx force:apex:test:run --targetusername installorg --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
+        //             command("sfdx force:apex:test:run --targetusername installorg"+
+        //              " --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
         //         }
         //     }
         // }
@@ -174,6 +182,5 @@ pipeline {
         //     }
         // }
     // }
-    
 // }
 
