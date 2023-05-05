@@ -72,10 +72,12 @@ pipeline {
                 script {
                     def test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
                     println(test_output)
-                    test_output_arr = test_output.split(' ')
-                    println(test_output_arr)
-                    def test_run_id = test_output_arr[test_output_arr.indexOf('-i') + 1]
-                    println(test_run_id)
+                    // looks for the -i output in the return string indicating the testrunid and then grabs the next non-whitespace arg 
+                    // which is the testrunid
+                    def pattern = /-i\s+(\S+)/
+                    def matcher = (output =~ pattern)
+                    def testRunId = matcher[0][1]
+                    println "Test Run ID: \${testRunId}"
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
                 }
