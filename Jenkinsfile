@@ -104,10 +104,10 @@ pipeline {
                 script {
                     command('if not exist test_results mkdir test_results')
                     command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--code-coverage --result-format junit --testlevel ${TEST_LEVEL} --wait 30 --outputdir test_results")
+                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} --wait 30 --output-dir test_results")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
-                    println rtnMsg
+                    // println rtnMsg
                     // def testRunId = testRunJson.result.testRunId
                     // println("Test Run ID: ${testRunId}")
                     // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
