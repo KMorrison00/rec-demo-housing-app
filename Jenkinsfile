@@ -77,7 +77,7 @@ pipeline {
                     def pattern = /-i\s+(\S+)/
                     def matcher = (rtn_msg =~ pattern)
                     def testRunId = matcher[0][1]
-                    println "Test Run ID: \${testRunId}"
+                    println "Test Run ID: ${testRunId}"
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
                 }
