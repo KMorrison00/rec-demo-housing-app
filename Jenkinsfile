@@ -91,7 +91,7 @@ pipeline {
                     String testRunId = extractTestRunId(rtnMsg)
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
-                        "--codecoverage --testrunid ${testRunId} --outputdir test_results")
+                        "--codecoverage --testrunid ${testRunId} --outputdir test_results --wait 10")
                     archiveArtifacts artifacts: 'test_results/*'
                 }
             }
