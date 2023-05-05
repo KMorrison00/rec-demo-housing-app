@@ -3,10 +3,10 @@ import java.util.regex.Matcher
 // helper function to be OS agnostic
 String command(String script) {
     if (isUnix()) {
-        return sh(returnStatus: true, script: script)
+        return sh(returnStdout: true, script: script)
     }
-    // return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
-    return bat(returnStatus: true, script: script)
+    return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
+    // return bat(returnStatus: true, script: script)
 }
 
 // helper fucntion to extract strings from stdOut
@@ -103,8 +103,8 @@ pipeline {
             steps {
                 script {
                     command('if not exist test_results mkdir test_results')
-                    command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} --wait 30 --output-dir test_results")
+                    String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    "--code-coverage --result-format junit --test-level ${TEST_LEVEL} --wait 30")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
                     // println rtnMsg
@@ -112,7 +112,7 @@ pipeline {
                     // println("Test Run ID: ${testRunId}")
                     // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                     //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    junit 'test_results/*.xml'
+                    junit rtnMsg
                 }
             }
         }
