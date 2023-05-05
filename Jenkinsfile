@@ -85,14 +85,14 @@ pipeline {
             steps {
                 script {
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
-                    "--codecoverage --resultformat json --testlevel ${TEST_LEVEL} --wait 10")
-                    def jsonSlurp = new groovy.json.JsonSlurper()
-                    def testRunJson = jsonSlurp.parseText(rtnMsg)
-                    println testRunJson
-                    def testRunId = testRunJson.result.testRunId
-                    println("Test Run ID: ${testRunId}")
-                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
-                        "--codecoverage --testrunid ${testRunId} --outputdir test_results")
+                    "--codecoverage --resultformat human --testlevel ${TEST_LEVEL} --wait 10")
+                    // def jsonSlurp = new groovy.json.JsonSlurper()
+                    // def testRunJson = jsonSlurp.parseText(rtnMsg)
+                    println rtnMsg
+                    // def testRunId = testRunJson.result.testRunId
+                    // println("Test Run ID: ${testRunId}")
+                    // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
+                    //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
                     archiveArtifacts artifacts: '*'
                     archiveArtifacts artifacts: 'test_results/*'
                 }
