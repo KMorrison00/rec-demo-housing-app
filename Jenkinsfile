@@ -121,6 +121,7 @@ pipeline {
                     // command("sfdx force:apex:test:report --target-org ${ALIAS}" +
                     //     " --resultformat junit --code-coverage --test-run-id ${testRunId} --output-dir test_results ${filePipe} results.xml")
                     archiveArtifacts artifacts: 'test_results.json'
+                    cucumber: 'test_results.json'
                     // junit 'results.xml'
                 }
             }
