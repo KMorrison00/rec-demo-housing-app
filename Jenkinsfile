@@ -1,12 +1,18 @@
 #!/usr/bin/env groovy
 import java.util.regex.Matcher
 // helper function to be OS agnostic
+
 String command(String script) {
+    if (isUnix()) {
+        return sh(returnSatust: true, script: script)
+    }
+    return bat(returnStatus: true, script: script)
+}
+String command_stdout(String script) {
     if (isUnix()) {
         return sh(returnStdout: true, script: script)
     }
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
-    // return bat(returnStatus: true, script: script)
 }
 
 // helper fucntion to extract strings from stdOut
@@ -103,7 +109,7 @@ pipeline {
             steps {
                 script {
                     command('if not exist test_results mkdir test_results')
-                    String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    String rtnMsg = command_stdout("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--code-coverage --result-format junit --test-level ${TEST_LEVEL} --wait 30")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
