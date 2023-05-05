@@ -1,11 +1,10 @@
 #!/usr/bin/env groovy
-
-import java.util.regex.Pattern
 import java.util.regex.Matcher
 
 // helper function to be OS agnostic
 String command(String script) {
-    if (unix()) {
+    /* groovylint-disable-next-line UnnecessaryGetter */
+    if (isUnix()) {
         return sh(returnStdout: true, script: script)
     }
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
