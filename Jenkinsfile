@@ -88,6 +88,7 @@ pipeline {
                     "--codecoverage --resultformat json --testlevel ${TEST_LEVEL} --wait 10")
                     def jsonSlurp = new groovy.json.JsonSlurper()
                     def testRunJson = jsonSlurp.parseText(rtnMsg)
+                    println testRunJson
                     def testRunId = testRunJson.result.testRunId
                     println("Test Run ID: ${testRunId}")
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
