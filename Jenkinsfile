@@ -6,7 +6,8 @@ def command(script) {
     if (isUnix()) {
         return sh(returnStdout: true, script: script);
     } else {
-        return bat(returnStdout: true, script: script);
+        def output = bat(returnStdout: true, script: script).trim()
+        return output.readLines().drop(1).join(" ");
     }
 }
 
@@ -69,9 +70,10 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
-                    test_json = readJSON text: test_output
-                    test_run_id = test_json.result.testRunId
+                    def test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    def test_json = jsonSlurp.parseText(testRunOutput)
+                    def jsonSlurp = new JsonSlurperClassic()
+                    def test_run_id = testRunJson.result.testRunId
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
                     archiveArtifacts artifacts: "test_results/*"
                 }
@@ -102,12 +104,7 @@ pipeline {
         // stage('Create Package Version') {
         //     steps {
         //         script {
-        //             if (isUnix()) {
-        //                 output = sh returnStdout: true, script: "sfdx force:package:version:create --package ${PACKAGE_NAME} --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg"
-        //             } else {
-        //                 output = bat(returnStdout: true, script: "sfdx force:package:version:create --package ${PACKAGE_NAME} --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg").trim()
-        //                 output = output.readLines().drop(1).join(" ")
-        //             }
+        //             output = command("sfdx force:package:version:create --package ${PACKAGE_NAME} --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg")
 
         //             // Wait 5 minutes for package replication.
         //             sleep 300
