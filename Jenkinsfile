@@ -1,6 +1,5 @@
 #!/usr/bin/env groovy
 import java.util.regex.Matcher
-
 // helper function to be OS agnostic
 String command(String script) {
     if (isUnix()) {
@@ -87,7 +86,7 @@ pipeline {
                 script {
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--codecoverage --resultformat json --testlevel ${TEST_LEVEL} --wait 10")
-                    def jsonSlurp = new groovy.json.JsonSlurp()
+                    def jsonSlurp = new groovy.json.JsonSlurper()
                     def testRunJson = jsonSlurp.parseText(rtnMsg)
                     def testRunId = testRunJson.result.testRunId
                     println("Test Run ID: ${testRunId}")
