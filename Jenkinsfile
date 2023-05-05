@@ -113,7 +113,7 @@ pipeline {
                         outPipe = '>'
                     }
                     command('if not exist test_results mkdir test_results')
-                    command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    command_stdout("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--code-coverage --result-format junit --test-level ${TEST_LEVEL} ${outPipe} results.xml")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
