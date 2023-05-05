@@ -46,6 +46,15 @@ pipeline {
                  url: 'https://github.com/KMorrison00/rec-demo-housing-app'
             }
         }
+        stage('Run Static Code Analysis') {
+            // Install PMD and run static code analysis, saving the results as an XML file
+            command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+        }
+
+        stage('Publish Static Code Analysis Results') {
+            // Publish the PMD static code analysis results in Jenkins
+            recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
+        }
 
         // Authorize the Dev Hub org with JWT key and give it an alias.
         stage('Authorize DevHub And Create Scratch Org') {
@@ -86,7 +95,7 @@ pipeline {
             steps {
                 script {
                     command('if not exist test_results mkdir test_results')
-                    command("sfdx force:apex:test:run --synchronous --targetusername ${ALIAS} " +
+                    command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--code-coverage --result-format junit --testlevel ${TEST_LEVEL} --wait 30 --outputdir test_results")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
                     // def testRunJson = jsonSlurp.parseText(rtnMsg)
