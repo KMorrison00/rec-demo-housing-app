@@ -70,12 +70,12 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    def test_output = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
-                    println(test_output)
+                    def rtn_msg = command("sfdx force:apex:test:run --targetusername ${ALIAS} --resultformat json --codecoverage --testlevel ${TEST_LEVEL}")
+                    println(rtn_msg)
                     // looks for the -i output in the return string indicating the testrunid and then grabs the next non-whitespace arg 
                     // which is the testrunid
                     def pattern = /-i\s+(\S+)/
-                    def matcher = (output =~ pattern)
+                    def matcher = (rtn_msg =~ pattern)
                     def testRunId = matcher[0][1]
                     println "Test Run ID: \${testRunId}"
                     command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit --codecoverage --testrunid ${test_run_id} --outputdir test_results")
