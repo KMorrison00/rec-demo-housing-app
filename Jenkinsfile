@@ -84,7 +84,7 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    command('mkdir -p test_results')
+                    command('if not exist test_results mkdir test_results')
                     String rtnMsg = command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
                     "--code-coverage --result-format junit --testlevel ${TEST_LEVEL} --wait 100 --output-dir test_results")
                     // def jsonSlurp = new groovy.json.JsonSlurper()
@@ -94,8 +94,7 @@ pipeline {
                     // println("Test Run ID: ${testRunId}")
                     // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
                     //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
-                    archiveArtifacts artifacts: '*'
-                    archiveArtifacts artifacts: 'test_results/*'
+                    junit 'test_results/*.xml'
                 }
             }
         }
