@@ -85,13 +85,13 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    command("sfdx force:apex:test:run --targetusername ${ALIAS} --synchronous" +
-                    " --resultformat junit --codecoverage --testlevel ${TEST_LEVEL} --wait 30 --outputdir test_result")
-                    // println(rtnMsg)
-                    // String testRunId = extractTestRunId(rtnMsg)
-                    // println("Test Run ID: ${testRunId}")
-                    // command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
-                    //     "--codecoverage --testrunid ${testRunId} --outputdir test_results")
+                    command("sfdx force:apex:test:run --targetusername ${ALIAS} " +
+                    "--codecoverage --testlevel ${TEST_LEVEL} --wait 10")
+                    println(rtnMsg)
+                    String testRunId = extractTestRunId(rtnMsg)
+                    println("Test Run ID: ${testRunId}")
+                    command("sfdx force:apex:test:report --targetusername ${ALIAS} --resultformat junit " +
+                        "--codecoverage --testrunid ${testRunId} --outputdir test_results")
                     archiveArtifacts artifacts: '*'
                     archiveArtifacts artifacts: 'test_results/*'
                 }
