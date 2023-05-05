@@ -118,8 +118,8 @@ pipeline {
                         "--code-coverage --result-format junit --test-level ${TEST_LEVEL} " +
                         "--wait -1 ${filePipe} test_results/results.xml")
 
-                    archiveArtifacts artifacts: 'test_results/results.json'
-                    cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
+                    archiveArtifacts artifacts: 'test_results/results.xml'
+                    // cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
                 }
             }
         }
