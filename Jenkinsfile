@@ -75,8 +75,9 @@ pipeline {
                     // which is the testrunid
                     def pattern = /-i\s+(\S+)/
                     def matcher = (rtnMsg =~ pattern)
+                    def match
                     if (matcher.find()) {
-                        def match = matcher.group(0) // Store the matched string in a serializable object
+                        match = matcher.group(0) // Store the matched string in a serializable object
                     }
                     def testRunId = match
                     println("Test Run ID: ${testRunId}")
