@@ -116,7 +116,7 @@ pipeline {
 
                     command("sfdx force:apex:test:run --target-org ${ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-                        "--wait -1 l")
+                        "--wait -1 ")
 
                     // archiveArtifacts artifacts: 'test_results/*.xml'
                     // cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
