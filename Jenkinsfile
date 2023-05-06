@@ -114,9 +114,12 @@ pipeline {
                     }
                     command('if not exist test_results mkdir test_results')
 
-                    command("sfdx force:apex:test:run --target-org ${ALIAS} " +
+                    command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-                        "--wait -1 ")
+                        "--wait 10 ${filePipe} test_results/results.txt")
+
+                    archiveArtifacts artifacts: 'test_results/*'
+                    // cucumber(jsonReportDirectory: 'reports', fileIncludePattern: '**/*.json')
 
                     // archiveArtifacts artifacts: 'test_results/*.xml'
                     // cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
