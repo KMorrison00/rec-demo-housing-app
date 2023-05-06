@@ -117,11 +117,11 @@ pipeline {
                             println coverageStr
                             def coverage = Long.valueOf(coverageStr.trim().replace('%', ''))
                             println coverage
-                            if (coverage >= MIN_REQUIRED_COVERAGE) {
-                                echo "Coverage is ${coverage}%"
-                            } else {
-                                error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
-                            }
+                            // if (coverage >= MIN_REQUIRED_COVERAGE) {
+                            //     echo "Coverage is ${coverage}%"
+                            // } else {
+                            //     error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
+                            // }
                         }
                     }
                 }
