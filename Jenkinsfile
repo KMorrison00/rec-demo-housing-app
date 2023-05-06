@@ -27,7 +27,7 @@ pipeline {
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
-        MIN_REQUIRED_COVERAGE = 55
+        MIN_REQUIRED_COVERAGE = 55.0
     }
 
     stages {
@@ -116,7 +116,7 @@ pipeline {
                         if (line.contains('Org Wide Coverage')) {
                             def coverageStr = line.split()[3]
                             println coverageStr
-                            def coverage = coverageStr.replace('%', '').toDouble()
+                            def coverage = Double.parseDouble(coverageStr.replace('%', ''))
                             println coverage
                             if (coverage >= MIN_REQUIRED_COVERAGE) {
                                 echo "Coverage is ${coverage}%"
