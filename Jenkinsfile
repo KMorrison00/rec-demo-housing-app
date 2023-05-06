@@ -122,7 +122,9 @@ pipeline {
                     archiveArtifacts artifacts: 'test_results/*.txt'
                     // check coverage results
                     def coverageArr = coverage.split('\n')
-                    println coverageArr
+                    for (line in coverageArr) {
+                        println line
+                    }
                 }
             }
         }
