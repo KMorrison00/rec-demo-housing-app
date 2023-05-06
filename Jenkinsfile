@@ -116,13 +116,9 @@ pipeline {
 
                     command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-                        "--wait 10 ${filePipe} test_results/results.txt")
+                        "--wait 10 ${filePipe} test_results/apex_results.txt")
 
-                    archiveArtifacts artifacts: 'test_results/*'
-                    // cucumber(jsonReportDirectory: 'reports', fileIncludePattern: '**/*.json')
-
-                    // archiveArtifacts artifacts: 'test_results/*.xml'
-                    // cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
+                    archiveArtifacts artifacts: 'test_results/*.txt'
                 }
             }
         }
