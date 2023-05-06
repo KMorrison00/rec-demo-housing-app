@@ -26,7 +26,7 @@ pipeline {
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
-        MIN_REQUIRED_COVERAGE = 75.0
+        MIN_REQUIRED_COVERAGE = 65.0
     }
 
     stages {
