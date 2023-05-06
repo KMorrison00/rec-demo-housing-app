@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-import java.util.regex.Matcher
+import java.text.NumberFormat
 // helper function to be OS agnostic
 
 String command(String script) {
@@ -116,7 +116,7 @@ pipeline {
                         if (line.contains('Org Wide Coverage')) {
                             def coverageStr = line.split()[3]
                             println coverageStr
-                            def coverage = Double.parseDouble(coverageStr.replace('%', ''))
+                            def coverage = NumberFormat.getInstance().parse(coverageStr.replace('%', ''))
                             println coverage
                             if (coverage >= MIN_REQUIRED_COVERAGE) {
                                 echo "Coverage is ${coverage}%"
