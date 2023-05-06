@@ -117,6 +117,8 @@ pipeline {
                             println coverageStr
                             def coverage = Long.valueOf(coverageStr.trim().replace('%', ''))
                             println coverage
+                            println coverage.getClass()
+                            println MIN_REQUIRED_COVERAGE.getClass()
                             // if (coverage >= MIN_REQUIRED_COVERAGE) {
                             //     echo "Coverage is ${coverage}%"
                             // } else {
