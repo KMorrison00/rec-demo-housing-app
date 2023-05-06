@@ -115,7 +115,9 @@ pipeline {
                     lines.each { line ->
                         if (line.contains('Org Wide Coverage')) {
                             def coverageStr = line.split()[3]
+                            println coverageStr
                             def coverage = coverageStr.replace('%', '').toDouble()
+                            println coverage
                             if (coverage >= MIN_REQUIRED_COVERAGE) {
                                 echo "Coverage is ${coverage}%"
                             } else {
