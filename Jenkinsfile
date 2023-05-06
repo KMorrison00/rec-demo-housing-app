@@ -114,27 +114,20 @@ pipeline {
                     }
                     command('if not exist test_results mkdir test_results')
 
-                    command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
-                        "--code-coverage --result-format junit --test-level ${TEST_LEVEL} " +
-                        "--wait -1 --output-dir test_results ${filePipe} test_results/results.xml")
+                    command("sfdx force:apex:test:run --target-org ${ALIAS} " +
+                        "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
+                        "--wait -1 l")
 
-                    archiveArtifacts artifacts: 'test_results/*.xml'
+                    // archiveArtifacts artifacts: 'test_results/*.xml'
                     // cucumber(jsonReportDirectory: 'test_results', fileIncludePattern: '*.json')
                 }
             }
         }
-    // Delete test scratch org.
-    // stage('Delete Scratch Org') {
-    //     steps {
-    //         script {
-    //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-    //         }
-    //     }
-    // }
     }
 // post {
-//     failure {
+//     always {
 //         script {
+//             // cleanup
 //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
 //         }
 //     }
