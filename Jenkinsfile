@@ -115,7 +115,7 @@ pipeline {
                         if (line.contains('Org Wide Coverage')) {
                             def coverageStr = line.split()[3]
                             println coverageStr
-                            def coverage = Long.valueOf(coverageStr.replace('%', ''))
+                            def coverage = Long.valueOf(coverageStr.trim().replace('%', ''))
                             println coverage
                             if (coverage >= MIN_REQUIRED_COVERAGE) {
                                 echo "Coverage is ${coverage}%"
