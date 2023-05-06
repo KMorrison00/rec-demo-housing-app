@@ -40,7 +40,7 @@ pipeline {
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
-        REQUIRED_COVERAGE = 75
+        MIN_REQUIRED_COVERAGE = 55
     }
 
     stages {
@@ -109,21 +109,31 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
+                    String apexTestFile = 'test_results/apex_results.txt'
                     String filePipe = '^>'
                     if (isUnix()) {
                         filePipe = '>'
                     }
                     command('if not exist test_results mkdir test_results')
 
-                    String coverage = command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
+                    command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-                        "--wait 10 ${filePipe} test_results/apex_results.txt")
+                        "--wait 10 ${filePipe} ${apexTestFile}")
 
-                    archiveArtifacts artifacts: 'test_results/*.txt'
+                    archiveArtifacts artifacts: apexTestFile
                     // check coverage results
-                    def coverageArr = coverage.split('\n')
-                    for (line in coverageArr) {
-                        println line
+                    def fileContent = readFile apexTestFile
+                    def lines = fileContent.readLines()
+
+                    lines.each { line ->
+                        if (line.contains('Org Wide Coverage')) {
+                            def coverage = line.split()[3].toDouble()
+                            if (coverage >= MIN_REQUIRED_COVERAGE) {
+                                echo "Coverage is ${coverage}%"
+                            } else {
+                                error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
+                            }
+                        }
                     }
                 }
             }
