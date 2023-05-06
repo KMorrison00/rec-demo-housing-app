@@ -40,6 +40,7 @@ pipeline {
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
+        REQUIRED_COVERAGE = 75
     }
 
     stages {
@@ -114,11 +115,14 @@ pipeline {
                     }
                     command('if not exist test_results mkdir test_results')
 
-                    command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
+                    String coverage = command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
                         "--wait 10 ${filePipe} test_results/apex_results.txt")
 
                     archiveArtifacts artifacts: 'test_results/*.txt'
+                    // check coverage results
+                    def coverageArr = coverage.split('\n')
+                    println coverageArr
                 }
             }
         }
