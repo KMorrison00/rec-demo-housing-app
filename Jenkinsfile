@@ -126,7 +126,6 @@ pipeline {
                                 // Handle the exception and display the error message
                                 currentBuild.result = 'FAILURE'
                                 currentBuild.description = "Error: ${e.message}"
-                                return 0
                             }
                         }
                     }
