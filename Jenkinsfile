@@ -15,19 +15,6 @@ String command_stdout(String script) {
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
 
-// helper fucntion to extract strings from stdOut
-@NonCPS
-String extractTestRunId(String input) {
-    // looks for the -i char in rtnMsg indicating the testrunid and then grabs the next arg
-    // which is -i testrunid
-    String pattern = /-i\s+(\S+)/
-    Matcher matcher = (input =~ pattern)
-    if (matcher.find()) {
-        return matcher.group(1)
-    }
-    return ''
-}
-
 // set credentials for all the CI steps, env variables are set in jenkins ui
 // private key is stored in credentials because its a file
 pipeline {
@@ -109,8 +96,8 @@ pipeline {
         stage('Run Tests In Scratch Org') {
             steps {
                 script {
-                    String apexTestFile = 'test_results/apex_results.txt'
-                    String filePipe = '^>'
+                    def apexTestFile = 'test_results/apex_results.txt'
+                    def filePipe = '^>'
                     if (isUnix()) {
                         filePipe = '>'
                     }
@@ -127,7 +114,8 @@ pipeline {
 
                     lines.each { line ->
                         if (line.contains('Org Wide Coverage')) {
-                            def coverage = line.split()[3].toDouble()
+                            def coverageStr = line.split()[3]
+                            def coverage = coverageStr.replace('%', '').toDouble()
                             if (coverage >= MIN_REQUIRED_COVERAGE) {
                                 echo "Coverage is ${coverage}%"
                             } else {
