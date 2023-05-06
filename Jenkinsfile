@@ -1,5 +1,4 @@
 #!/usr/bin/env groovy
-import java.text.NumberFormat
 // helper function to be OS agnostic
 
 String command(String script) {
@@ -27,7 +26,7 @@ pipeline {
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         ALIAS = 'ciorg'
-        Long MIN_REQUIRED_COVERAGE = 55
+        MIN_REQUIRED_COVERAGE = 55.0
     }
 
     stages {
