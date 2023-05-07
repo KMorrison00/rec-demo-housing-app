@@ -25,7 +25,8 @@ pipeline {
         TEST_LEVEL = 'RunLocalTests'
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
-        ALIAS = 'ciorg'
+        SCRATCH_ORG_ALIAS = 'scratch_org'
+        HUB_ORG = 'ciorg'
         MIN_REQUIRED_COVERAGE = 65.0
     }
 
@@ -64,10 +65,10 @@ pipeline {
                     withCredentials([file(credentialsId: env.SERVER_KEY_CREDENTALS_ID, variable: 'server_key_file')]) {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file" +
-                            ' --set-default-dev-hub --alias HubOrg')
-                        // command("sfdx force:org:create --target-dev-hub HubOrg  "+
-                        //         "--definitionfile config/project-scratch-def.json "+
-                        //         "--setalias ${ALIAS} --wait 10 --durationdays 1")
+                            " --set-default-dev-hub --alias ${HUB_ORG}")
+                    // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                    //         "--definitionfile config/project-scratch-def.json "+
+                    //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
@@ -77,7 +78,7 @@ pipeline {
         // stage('Display Scratch Org') {
         //     steps {
         //         script {
-        //             command("sfdx force:org:display --targetusername ${ALIAS}")
+        //             command("sfdx force:org:display --targetusername ${SCRATCH_ORG_ALIAS}")
         //         }
         //     }
         // }
@@ -86,7 +87,7 @@ pipeline {
         // stage('Push To Scratch Org') {
         //     steps {
         //         script {
-        //             command("sfdx force:source:push --targetusername ${ALIAS}")
+        //             command("sfdx force:source:push --targetusername ${SCRATCH_ORG_ALIAS}")
         //         }
         //     }
         // }
@@ -102,7 +103,7 @@ pipeline {
                     }
                     command('if not exist test_results mkdir test_results')
 
-                    command_stdout("sfdx force:apex:test:run --target-org ${ALIAS} " +
+                    command_stdout("sfdx force:apex:test:run --target-org ${SCRATCH_ORG_ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
                         "--wait 10 ${filePipe} ${apexTestFile}")
 
@@ -132,20 +133,55 @@ pipeline {
                 }
             }
         }
+        stage('Check Package') {
+            steps {
+                script {
+                    def output = command_stdout("sfdx force:package:list --targetdevhubusername ${HUB_ORG} --json")
+                    def jsonSlurper = new groovy.json.JsonSlurper()
+                    def response = jsonSlurper.parseText(output)
+                    echo response
+                    def packageExists = response.package.name == PACKAGE_NAME
+                    
+                    if (packageExists) {
+                        echo "Package exists with ID: ${response.package.Id}"
+                        env.PACKAGE_ID = response.package.Id
+                    } else {
+                        echo 'Package does not exist'
+                        env.PACKAGE_ID = ''
+                    }
+                }
+            }
+        }
+        stage('Create Package') {
+            when {
+                expression { env.PACKAGE_ID == '' }
+            }
+            steps {
+                script {
+                    output = command_stdout('sfdx force:package:create --name YourPackageName'+
+                        " --packagetype Unlocked --path force-app --targetdevhubusername ${HUB_ORG} --json")
+                    def jsonSlurper = new groovy.json.JsonSlurper()
+                    def response = jsonSlurper.parseText(output)
+                    echo response
+                    env.PACKAGE_ID = response.result.Id
+                    echo "Created new package with ID: ${env.PACKAGE_ID}"
+                }
+            }
+        }
 
         // Create package version.
         stage('Create Package Version') {
             steps {
                 script {
                     output = command_stdout("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
-                                    ' --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg')
+                                    " --installationkeybypass --wait 10 --json --targetdevhubusername ${HUB_ORG}")
 
                     // Wait 5 minutes for package replication.
                     sleep 300
 
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
-
+                    echo response
                     PACKAGE_VERSION = response.result.SubscriberPackageVersionId
 
                     response = null
@@ -155,13 +191,13 @@ pipeline {
             }
         }
     }
-    // post {
-    //     always {
-    //         script {
-    //             // cleanup
-    //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-    //         }
-    //     }
-    // }
+// post {
+//     always {
+//         script {
+//             // cleanup
+//             command("sfdx force:org:delete --targetusername ${SCRATCH_ORG_ALIAS} --noprompt")
+//         }
+//     }
+// }
 }
 

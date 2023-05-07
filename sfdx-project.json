@@ -13,8 +13,5 @@
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "57.0",
-  "oauthLocalPort": 1717,
-  "packageAliases": {
-    "test_package_1": "0HoXXXXXXXXXXXX" 
-  }
+  "oauthLocalPort": 1717
 }
