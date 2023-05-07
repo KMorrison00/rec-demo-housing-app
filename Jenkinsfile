@@ -14,11 +14,11 @@ String command_stdout(String script) {
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
 
-// set credentials for all the CI steps, env variables are set in jenkins ui
-// private key is stored in credentials because its a file
 pipeline {
     agent any
 
+    // set credentials for all the CI steps, env variables are set in jenkins ui
+    // private key is stored in credentials because its a file
     environment {
         SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
         SF_USERNAME = "${env.SF_USERNAME}"
@@ -65,31 +65,31 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file" +
                             ' --set-default-dev-hub --alias HubOrg')
-                        command("sfdx force:org:create --target-dev-hub HubOrg  "+
-                                "--definitionfile config/project-scratch-def.json "+
-                                "--setalias ${ALIAS} --wait 10 --durationdays 1")
+                        // command("sfdx force:org:create --target-dev-hub HubOrg  "+
+                        //         "--definitionfile config/project-scratch-def.json "+
+                        //         "--setalias ${ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
         }
 
-        // Display test scratch org info.
-        stage('Display Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:org:display --targetusername ${ALIAS}")
-                }
-            }
-        }
+        // // Display test scratch org info.
+        // stage('Display Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:org:display --targetusername ${ALIAS}")
+        //         }
+        //     }
+        // }
 
-        // Push source to test scratch org.
-        stage('Push To Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:source:push --targetusername ${ALIAS}")
-                }
-            }
-        }
+        // // Push source to test scratch org.
+        // stage('Push To Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:source:push --targetusername ${ALIAS}")
+        //         }
+        //     }
+        // }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
@@ -137,7 +137,7 @@ pipeline {
         stage('Create Package Version') {
             steps {
                 script {
-                    output = command("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
+                    output = command_stdout("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
                                     ' --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg')
 
                     // Wait 5 minutes for package replication.
