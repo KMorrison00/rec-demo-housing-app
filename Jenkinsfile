@@ -25,8 +25,8 @@ pipeline {
         TEST_LEVEL = 'RunLocalTests'
         PACKAGE_NAME = 'test_package_1'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
-        SCRATCH_ORG_ALIAS = 'scratch_org'
-        HUB_ORG = 'ciorg'
+        SCRATCH_ORG_ALIAS = 'ciorg'
+        HUB_ORG = 'HubOrg'
         MIN_REQUIRED_COVERAGE = 65.0
     }
 
