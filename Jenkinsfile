@@ -132,87 +132,36 @@ pipeline {
                 }
             }
         }
-    }
-// post {
-//     always {
-//         script {
-//             // cleanup
-//             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
-//         } 
-//     }
-// }
-}
 
         // Create package version.
-        // stage('Create Package Version') {
-        //     steps {
-        //         script {
-        //             output = command("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
-        //                              " --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg")
+        stage('Create Package Version') {
+            steps {
+                script {
+                    output = command("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
+                                    ' --installationkeybypass --wait 10 --json --targetdevhubusername HubOrg')
 
-        //             // Wait 5 minutes for package replication.
-        //             sleep 300
+                    // Wait 5 minutes for package replication.
+                    sleep 300
 
-        //             def jsonSlurper = new groovy.json.JsonSlurper
-        //             def response = jsonSlurper.parseText(output)
+                    def jsonSlurper = new groovy.json.JsonSlurper()
+                    def response = jsonSlurper.parseText(output)
 
-        //             PACKAGE_VERSION = response.result.SubscriberPackageVersionId
+                    PACKAGE_VERSION = response.result.SubscriberPackageVersionId
 
-        //             response = null
+                    response = null
 
-        //             echo ${PACKAGE_VERSION}
-        //         }
-        //     }
-        // }
-
-        // // Create new scratch org to install package to.
-        // stage('Create Package Install Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:create --targetdevhubusername HubOrg --setdefaultusername"+
-        //                  " --definitionfile config/project-scratch-def.json "+
-        //                  "--setalias installorg --wait 10 --durationdays 1")
-        //         }
-        //     }
-        // }
-
-        // // Display install scratch org info.
-        // stage('Display Install Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:display --targetusername installorg")
-        //         }
-        //     }
-        // }
-
-        // // Install package in scratch org.
-        // stage('Install Package In Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:package:install --package ${PACKAGE_VERSION}"+
-        //                      ' --targetusername installorg --wait 10')
-        //         }
-        //     }
-        // }
-
-        // // Run unit tests in package install scratch org.
-        // stage('Run Tests In Package Install Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:apex:test:run --targetusername installorg"+
-        //              " --resultformat tap --codecoverage --testlevel ${TEST_LEVEL} --wait 10")
-        //         }
-        //     }
-        // }
-
-        // // Delete package install scratch org.
-        // stage('Delete Package Install Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:delete --targetusername installorg --noprompt")
-        //         }
-        //     }
-        // }
+                    echo "${PACKAGE_VERSION}"
+                }
+            }
+        }
+    }
+    // post {
+    //     always {
+    //         script {
+    //             // cleanup
+    //             command("sfdx force:org:delete --targetusername ${ALIAS} --noprompt")
+    //         }
+    //     }
     // }
-// }
+}
 
