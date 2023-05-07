@@ -139,7 +139,7 @@ pipeline {
                     def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
-                    echo response
+                    echo response.toString()
                     def packageExists = response.package.name == PACKAGE_NAME
                     
                     if (packageExists) {
@@ -162,7 +162,7 @@ pipeline {
                         " --packagetype Unlocked --path force-app --target-dev-hub ${HUB_ORG} --json")
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
-                    echo response
+                    echo response.toString()
                     env.PACKAGE_ID = response.result.Id
                     echo "Created new package with ID: ${env.PACKAGE_ID}"
                 }
