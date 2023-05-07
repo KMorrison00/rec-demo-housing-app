@@ -66,31 +66,31 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                    command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                            '--definitionfile config/project-scratch-def.json '+
-                            "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                        // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                        //         '--definitionfile config/project-scratch-def.json '+
+                        //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
         }
 
-        // Display test scratch org info.
-        stage('Display Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:org:display --targetusername ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Display test scratch org info.
+        // stage('Display Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:org:display --targetusername ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
-        // Push source to test scratch org.
-        stage('Push To Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:source:push --targetusername ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Push source to test scratch org.
+        // stage('Push To Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:source:push --targetusername ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
@@ -136,7 +136,7 @@ pipeline {
         stage('Check Package') {
             steps {
                 script {
-                    def output = command_stdout("sfdx force:package:list --targetdevhubusername ${HUB_ORG} --json")
+                    def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
                     echo response
@@ -159,7 +159,7 @@ pipeline {
             steps {
                 script {
                     output = command_stdout('sfdx force:package:create --name YourPackageName'+
-                        " --packagetype Unlocked --path force-app --targetdevhubusername ${HUB_ORG} --json")
+                        " --packagetype Unlocked --path force-app --target-dev-hub ${HUB_ORG} --json")
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
                     echo response
@@ -174,7 +174,7 @@ pipeline {
             steps {
                 script {
                     output = command_stdout("sfdx force:package:version:create --package ${PACKAGE_NAME}"+
-                                    " --installationkeybypass --wait 10 --json --targetdevhubusername ${HUB_ORG}")
+                                    " --installationkeybypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
 
                     // Wait 5 minutes for package replication.
                     sleep 300
