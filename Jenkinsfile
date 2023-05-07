@@ -140,13 +140,14 @@ pipeline {
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
                     echo response.toString()
-                    def packageExists = response.package.name == PACKAGE_NAME
-                    
-                    if (packageExists) {
-                        echo "Package exists with ID: ${response.package.Id}"
-                        env.PACKAGE_ID = response.package.Id
-                    } else {
-                        echo 'Package does not exist'
+                    try {
+                        def packageExists = response.package.name == PACKAGE_NAME
+                        if (packageExists) {
+                            echo "Package exists with ID: ${response.package.Id}"
+                            env.PACKAGE_ID = response.package.Id
+                        }
+                    } catch (Exception e) {
+                        echo "Package does not exist, ${e.message}"
                         env.PACKAGE_ID = ''
                     }
                 }
