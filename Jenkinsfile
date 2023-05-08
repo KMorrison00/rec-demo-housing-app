@@ -44,7 +44,7 @@ pipeline {
             steps {
                 script {
                     // Install PMD and run static code analysis, saving the results as an XML file
-                    command_stdout('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+                    command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
                 }
             }
         }
