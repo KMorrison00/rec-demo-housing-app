@@ -145,7 +145,13 @@ pipeline {
                             def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
-                            def packageExists = response.result[0].Name == PACKAGE_NAME
+                            try {
+                                def packageExists = response.result[0].Name == PACKAGE_NAME
+                            } catch (Exception e) {
+                                echo "Package Name not found"
+                                env.PACKAGE_ID = ''
+                                def packageExists = false
+                            }
                             if (packageExists) {
                                 env.PACKAGE_ID = response.result[0].Id
                                 echo "Package exists with ID: ${env.PACKAGE_ID}"
@@ -153,10 +159,7 @@ pipeline {
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
                                 sfdxProject.packageAliases.TractionRecDemo = env.PACKAGE_ID
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
-                            } else {
-                                echo 'Package does not exist'
-                                env.PACKAGE_ID = ''
-                            }
+                            } 
                         }
                     }
                 }
