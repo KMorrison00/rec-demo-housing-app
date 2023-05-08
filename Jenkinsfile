@@ -50,34 +50,36 @@ pipeline {
                 checkout scm
                 git branch: env.BRANCH_NAME, credentialsId: 'Jenkins',
                  url: 'https://github.com/KMorrison00/rec-demo-housing-app'
-                def prLabels = getPRLabels('KMorrison00', 'rec-demo-housing-app', env.GIT_PR_NUMBER, GITHUB_TOKEN)
-                echo "PR Labels: ${prLabels.join(', ')}"
-                if (prLabels.contains('ready_to_package')) {
-                    env.READY_TO_PACKAGE = true
-                    echo "The PR has the 'ready_to_package' label."
-                } else {
-                    env.READY_TO_PACKAGE = false
-                    echo "The PR does not have the 'ready_to_package' label."
-                }
-            }
-        }
-        stage('Run Static Code Analysis') {
-            steps {
                 script {
-                    // Install PMD and run static code analysis, saving the results as an XML file
-                    command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+                    def prLabels = getPRLabels('KMorrison00', 'rec-demo-housing-app', env.GIT_PR_NUMBER, GITHUB_TOKEN)
+                    echo "PR Labels: ${prLabels.join(', ')}"
+                    if (prLabels.contains('ready_to_package')) {
+                        env.READY_TO_PACKAGE = true
+                        echo "The PR has the 'ready_to_package' label."
+                    } else {
+                        env.READY_TO_PACKAGE = false
+                        echo "The PR does not have the 'ready_to_package' label."
+                    }
                 }
             }
         }
+        // stage('Run Static Code Analysis') {
+        //     steps {
+        //         script {
+        //             // Install PMD and run static code analysis, saving the results as an XML file
+        //             command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+        //         }
+        //     }
+        // }
 
-        stage('Publish Static Code Analysis Results') {
-            steps {
-                script {
-                    // Publish the PMD static code analysis results in Jenkins
-                    recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
-                }
-            }
-        }
+        // stage('Publish Static Code Analysis Results') {
+        //     steps {
+        //         script {
+        //             // Publish the PMD static code analysis results in Jenkins
+        //             recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
+        //         }
+        //     }
+        // }
 
         // Authorize the Dev Hub org with JWT key and give it an alias.
         stage('Authorize DevHub And Create Scratch Org') {
@@ -87,30 +89,30 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                    command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                            '--definitionfile config/project-scratch-def.json '+
-                            "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                    // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                    //         '--definitionfile config/project-scratch-def.json '+
+                    //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
         }
-        // Display test scratch org info.
-        stage('Display Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Display test scratch org info.
+        // stage('Display Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
-        // Push source to test scratch org.
-        stage('Push To Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Push source to test scratch org.
+        // stage('Push To Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
@@ -153,6 +155,7 @@ pipeline {
                 }
             }
         }
+
         stage('Packaging') {
             when {
                 expression {
