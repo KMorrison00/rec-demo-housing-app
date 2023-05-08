@@ -66,30 +66,30 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                    // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                    //         '--definitionfile config/project-scratch-def.json '+
-                    //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                    command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                            '--definitionfile config/project-scratch-def.json '+
+                            "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
         }
-        // // Display test scratch org info.
-        // stage('Display Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
-        //         }
-        //     }
-        // }
+        // Display test scratch org info.
+        stage('Display Scratch Org') {
+            steps {
+                script {
+                    command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
+                }
+            }
+        }
 
-        // // Push source to test scratch org.
-        // stage('Push To Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
-        //         }
-        //     }
-        // }
+        // Push source to test scratch org.
+        stage('Push To Scratch Org') {
+            steps {
+                script {
+                    command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
+                }
+            }
+        }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
