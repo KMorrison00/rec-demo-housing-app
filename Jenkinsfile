@@ -145,12 +145,12 @@ pipeline {
                             def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
+                            def packageExists = false
                             try {
-                                def packageExists = response.result[0].Name == PACKAGE_NAME
+                                packageExists = response.result[0].Name == PACKAGE_NAME
                             } catch (Exception e) {
                                 echo "Package Name not found"
                                 env.PACKAGE_ID = ''
-                                def packageExists = false
                             }
                             if (packageExists) {
                                 env.PACKAGE_ID = response.result[0].Id
