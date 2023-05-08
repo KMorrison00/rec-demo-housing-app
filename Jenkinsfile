@@ -1,4 +1,5 @@
 #!/usr/bin/env groovy
+import groovy.json.JsonSlurper
 // helper function to be OS agnostic
 
 String command(String script) {
@@ -14,6 +15,16 @@ String command_stdout(String script) {
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
 
+
+def getPRLabels(String repoOwner, String repoName, String prNumber, String githubToken) {
+    def jsonSlurper = new JsonSlurper()
+    def response = command_stdout("curl -s -H 'Authorization: token ${githubToken}'" +
+        " https://api.github.com/repos/${repoOwner}/${repoName}/issues/${prNumber}")
+    def prInfo = jsonSlurper.parseText(response)
+    return prInfo.labels.collect { it.name }
+}
+
+
 pipeline {
     agent any
 
@@ -28,6 +39,7 @@ pipeline {
         SCRATCH_ORG_ALIAS = 'scratch_org'
         HUB_ORG = 'ciorg'
         MIN_REQUIRED_COVERAGE = 65.0
+        GITHUB_TOKEN = credentials('kmorrison00-github-creds')
     }
 
     stages {
@@ -38,6 +50,15 @@ pipeline {
                 checkout scm
                 git branch: env.BRANCH_NAME, credentialsId: 'Jenkins',
                  url: 'https://github.com/KMorrison00/rec-demo-housing-app'
+                def prLabels = getPRLabels('KMorrison00', 'rec-demo-housing-app', env.GIT_PR_NUMBER, GITHUB_TOKEN)
+                echo "PR Labels: ${prLabels.join(', ')}"
+                if (prLabels.contains('ready_to_package')) {
+                    env.READY_TO_PACKAGE = true
+                    echo "The PR has the 'ready_to_package' label."
+                } else {
+                    env.READY_TO_PACKAGE = false
+                    echo "The PR does not have the 'ready_to_package' label."
+                }
             }
         }
         stage('Run Static Code Analysis') {
@@ -135,7 +156,7 @@ pipeline {
         stage('Packaging') {
             when {
                 expression {
-                    return pullRequest.labels.any { it == 'ready_to_package' }
+                    env.READY_TO_PACKAGE
                 }
             }
             stages {
@@ -144,7 +165,7 @@ pipeline {
                     steps {
                         script {
                             def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
-                            def jsonSlurper = new groovy.json.JsonSlurper()
+                            def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
                             def packageExists = response.result[0].Name == PACKAGE_NAME
@@ -162,13 +183,15 @@ pipeline {
                 // if theres no package yet, create one
                 stage('Create New Package') {
                     when {
-                        expression { env.PACKAGE_ID == '' }
+                        expression { 
+                            env.PACKAGE_ID == ''
+                        }
                     }
                     steps {
                         script {
                             output = command_stdout("sfdx force:package:create --name ${PACKAGE_NAME}" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
-                            def jsonSlurper = new groovy.json.JsonSlurper()
+                            def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
                             env.PACKAGE_ID = response.result.Id
@@ -186,7 +209,7 @@ pipeline {
 
                             // Wait 5 minutes for package replication.
                             sleep 300
-                            def jsonSlurper = new groovy.json.JsonSlurper()
+                            def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
                             PACKAGE_VERSION = response.result.SubscriberPackageVersionId
