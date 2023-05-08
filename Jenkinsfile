@@ -1,5 +1,6 @@
 #!/usr/bin/env groovy
 import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 // helper function to be OS agnostic
 
 String command(String script) {
@@ -17,7 +18,7 @@ String command_stdout(String script) {
 
 
 def getPRLabels(String repoOwner, String repoName, String prNumber, String githubToken) {
-    def jsonSlurper = new JsonSlurper()
+    def jsonSlurper = new JsonSlurperClassic()
     def response = command_stdout("curl -s -H 'Authorization: token ${githubToken}'" +
         " https://api.github.com/repos/${repoOwner}/${repoName}/issues/${prNumber}")
     def prInfo = jsonSlurper.parseText(response)
