@@ -69,10 +69,45 @@ pipeline {
                         // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
                         //         '--definitionfile config/project-scratch-def.json '+
                         //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                        def apexTestFile = 'test_results/apex_results.txt'
+                        def filePipe = '^>'
+                        if (isUnix()) {
+                            filePipe = '>'
+                        }
+                        command('if not exist test_results mkdir test_results')
+
+                        command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
+                            "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
+                            "--wait 10 ${filePipe} ${apexTestFile}")
+
+                        archiveArtifacts artifacts: apexTestFile
+                        // check coverage results
+                        def fileContent = readFile apexTestFile
+                        def lines = fileContent.readLines()
+
+                        lines.each { line ->
+                            if (line.contains('Org Wide Coverage')) {
+                                def coverageStr = line.split()[3]
+                                def coverage = Double.valueOf(coverageStr.trim().replace('%', ''))
+                                try {
+                                    // Your pipeline code, including the coverage check
+                                    if (coverage >= Double.valueOf(MIN_REQUIRED_COVERAGE)) {
+                                        echo "Coverage is ${coverage}%"
+                                    } else {
+                                        error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
+                                    }
+                                } catch (Exception e) {
+                                    // Handle the exception and display the error message
+                                    currentBuild.result = 'FAILURE'
+                                    currentBuild.description = "Error: ${e.message}"
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    
 
         // // Display test scratch org info.
         // stage('Display Scratch Org') {
@@ -93,46 +128,46 @@ pipeline {
         // }
 
         // Run unit tests in test scratch org.
-        stage('Run Tests In Scratch Org') {
-            steps {
-                script {
-                    def apexTestFile = 'test_results/apex_results.txt'
-                    def filePipe = '^>'
-                    if (isUnix()) {
-                        filePipe = '>'
-                    }
-                    command('if not exist test_results mkdir test_results')
+        // stage('Run Tests In Scratch Org') {
+        //     steps {
+        //         script {
+        //             def apexTestFile = 'test_results/apex_results.txt'
+        //             def filePipe = '^>'
+        //             if (isUnix()) {
+        //                 filePipe = '>'
+        //             }
+        //             command('if not exist test_results mkdir test_results')
 
-                    command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
-                        "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-                        "--wait 10 ${filePipe} ${apexTestFile}")
+        //             command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
+        //                 "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
+        //                 "--wait 10 ${filePipe} ${apexTestFile}")
 
-                    archiveArtifacts artifacts: apexTestFile
-                    // check coverage results
-                    def fileContent = readFile apexTestFile
-                    def lines = fileContent.readLines()
+        //             archiveArtifacts artifacts: apexTestFile
+        //             // check coverage results
+        //             def fileContent = readFile apexTestFile
+        //             def lines = fileContent.readLines()
 
-                    lines.each { line ->
-                        if (line.contains('Org Wide Coverage')) {
-                            def coverageStr = line.split()[3]
-                            def coverage = Double.valueOf(coverageStr.trim().replace('%', ''))
-                            try {
-                                // Your pipeline code, including the coverage check
-                                if (coverage >= Double.valueOf(MIN_REQUIRED_COVERAGE)) {
-                                    echo "Coverage is ${coverage}%"
-                                } else {
-                                    error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
-                                }
-                            } catch (Exception e) {
-                                // Handle the exception and display the error message
-                                currentBuild.result = 'FAILURE'
-                                currentBuild.description = "Error: ${e.message}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //             lines.each { line ->
+        //                 if (line.contains('Org Wide Coverage')) {
+        //                     def coverageStr = line.split()[3]
+        //                     def coverage = Double.valueOf(coverageStr.trim().replace('%', ''))
+        //                     try {
+        //                         // Your pipeline code, including the coverage check
+        //                         if (coverage >= Double.valueOf(MIN_REQUIRED_COVERAGE)) {
+        //                             echo "Coverage is ${coverage}%"
+        //                         } else {
+        //                             error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
+        //                         }
+        //                     } catch (Exception e) {
+        //                         // Handle the exception and display the error message
+        //                         currentBuild.result = 'FAILURE'
+        //                         currentBuild.description = "Error: ${e.message}"
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         stage('Packaging') {
             when {
                 expression {
@@ -200,6 +235,7 @@ pipeline {
             }
         }
     }
+}
 // post {
 //     always {
 //         script {
@@ -208,5 +244,5 @@ pipeline {
 //         }
 //     }
 // }
-}
+// }
 
