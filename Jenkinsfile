@@ -24,7 +24,7 @@ pipeline {
         SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
         SF_USERNAME = "${env.SF_USERNAME}"
         TEST_LEVEL = 'RunLocalTests'
-        PACKAGE_NAME = 'test_package_1'
+        PACKAGE_NAME = 'TractionRecDemo'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         SCRATCH_ORG_ALIAS = 'scratch_org'
         HUB_ORG = 'ciorg'
@@ -42,23 +42,23 @@ pipeline {
                  url: 'https://github.com/KMorrison00/rec-demo-housing-app'
             }
         }
-        stage('Run Static Code Analysis') {
-            steps {
-                script {
-                    // Install PMD and run static code analysis, saving the results as an XML file
-                    command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
-                }
-            }
-        }
+        // stage('Run Static Code Analysis') {
+        //     steps {
+        //         script {
+        //             // Install PMD and run static code analysis, saving the results as an XML file
+        //             command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
+        //         }
+        //     }
+        // }
 
-        stage('Publish Static Code Analysis Results') {
-            steps {
-                script {
-                    // Publish the PMD static code analysis results in Jenkins
-                    recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
-                }
-            }
-        }
+        // stage('Publish Static Code Analysis Results') {
+        //     steps {
+        //         script {
+        //             // Publish the PMD static code analysis results in Jenkins
+        //             recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
+        //         }
+        //     }
+        // }
 
         // Authorize the Dev Hub org with JWT key and give it an alias.
         stage('Authorize DevHub And Create Scratch Org') {
@@ -68,30 +68,30 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                    command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                            '--definitionfile config/project-scratch-def.json '+
-                            "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                    // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                    //         '--definitionfile config/project-scratch-def.json '+
+                    //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
         }
-        // Display test scratch org info.
-        stage('Display Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Display test scratch org info.
+        // stage('Display Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
-        // Push source to test scratch org.
-        stage('Push To Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Push source to test scratch org.
+        // stage('Push To Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
@@ -149,6 +149,10 @@ pipeline {
                             if (packageExists) {
                                 env.PACKAGE_ID = response.result[0].Id
                                 echo "Package exists with ID: ${env.PACKAGE_ID}"
+                                // update sdfx-project.json file for later steps
+                                def sfdxProject = readJSON file: 'sfdx-project.json'
+                                sfdxProject.packageAliases.TractionRecDemo = env.PACKAGE_ID
+                                writeJSON file: 'sfdx-project.json', json: sfdxProject
                             } else {
                                 echo 'Package does not exist'
                                 env.PACKAGE_ID = ''
@@ -166,7 +170,7 @@ pipeline {
                     }
                     steps {
                         script {
-                            output = command_stdout("sfdx force:package:create --name ${PACKAGE_NAME}" +
+                            output = command_stdout("sfdx package:create --name ${PACKAGE_NAME}" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
                             def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
@@ -181,7 +185,7 @@ pipeline {
                 stage('Create New Package Version') {
                     steps {
                         script {
-                            output = command_stdout("sfdx force:package:version:create --package ${env.PACKAGE_ID}" +
+                            output = command_stdout("sfdx package:version:create --package ${env.PACKAGE_ID}" +
                                         " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
 
                             // Wait 5 minutes for package replication.

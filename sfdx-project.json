@@ -1,9 +1,13 @@
 {
   "packageDirectories": [
     {
-      "path": "src"
+      "path": "src",
+      "package": "TractionRecDemo",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT"
     }
   ],
+
   "name": "rec-housing-app",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
