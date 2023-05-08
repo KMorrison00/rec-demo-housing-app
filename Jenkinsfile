@@ -144,7 +144,7 @@ pipeline {
                         def packageExists = response.package.name == PACKAGE_NAME
                         if (packageExists) {
                             echo "Package exists with ID: ${response.package.Id}"
-                            env.PACKAGE_ID = response.package.Id
+                            env.PACKAGE_ID = response.result.Id
                         }
                     } catch (Exception e) {
                         echo "Package does not exist, ${e.message}"
@@ -159,8 +159,8 @@ pipeline {
             }
             steps {
                 script {
-                    output = command_stdout('sfdx force:package:create --name YourPackageName'+
-                        " --packagetype Unlocked --path force-app --target-dev-hub ${HUB_ORG} --json")
+                    output = command_stdout("sfdx force:package:create --name ${PACKAGE_NAME}"+
+                        " --packagetype Unlocked --target-dev-hub ${HUB_ORG} --json")
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
                     echo response.toString()
