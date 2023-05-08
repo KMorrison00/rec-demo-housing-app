@@ -64,110 +64,74 @@ pipeline {
                 script {
                     withCredentials([file(credentialsId: env.SERVER_KEY_CREDENTALS_ID, variable: 'server_key_file')]) {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
-                            " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file $server_key_file" +
+                            " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                        // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                        //         '--definitionfile config/project-scratch-def.json '+
-                        //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
-                        def apexTestFile = 'test_results/apex_results.txt'
-                        def filePipe = '^>'
-                        if (isUnix()) {
-                            filePipe = '>'
-                        }
-                        command('if not exist test_results mkdir test_results')
+                        command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                                '--definitionfile config/project-scratch-def.json '+
+                                "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                    }
+                }
+            }
+        }
+        // Display test scratch org info.
+        stage('Display Scratch Org') {
+            steps {
+                script {
+                    command("sfdx force:org:display --targetusername ${SCRATCH_ORG_ALIAS}")
+                }
+            }
+        }
 
-                        command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
-                            "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-                            "--wait 10 ${filePipe} ${apexTestFile}")
+        // Push source to test scratch org.
+        stage('Push To Scratch Org') {
+            steps {
+                script {
+                    command("sfdx force:source:push --targetusername ${SCRATCH_ORG_ALIAS}")
+                }
+            }
+        }
 
-                        archiveArtifacts artifacts: apexTestFile
-                        // check coverage results
-                        def fileContent = readFile apexTestFile
-                        def lines = fileContent.readLines()
+        Run unit tests in test scratch org.
+        stage('Run Tests In Scratch Org') {
+            steps {
+                script {
+                    def apexTestFile = 'test_results/apex_results.txt'
+                    def filePipe = '^>'
+                    if (isUnix()) {
+                        filePipe = '>'
+                    }
+                    command('if not exist test_results mkdir test_results')
 
-                        lines.each { line ->
-                            if (line.contains('Org Wide Coverage')) {
-                                def coverageStr = line.split()[3]
-                                def coverage = Double.valueOf(coverageStr.trim().replace('%', ''))
-                                try {
-                                    // Your pipeline code, including the coverage check
-                                    if (coverage >= Double.valueOf(MIN_REQUIRED_COVERAGE)) {
-                                        echo "Coverage is ${coverage}%"
-                                    } else {
-                                        error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
-                                    }
-                                } catch (Exception e) {
-                                    // Handle the exception and display the error message
-                                    currentBuild.result = 'FAILURE'
-                                    currentBuild.description = "Error: ${e.message}"
+                    command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
+                        "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
+                        "--wait 10 ${filePipe} ${apexTestFile}")
+
+                    archiveArtifacts artifacts: apexTestFile
+                    // check coverage results
+                    def fileContent = readFile apexTestFile
+                    def lines = fileContent.readLines()
+
+                    lines.each { line ->
+                        if (line.contains('Org Wide Coverage')) {
+                            def coverageStr = line.split()[3]
+                            def coverage = Double.valueOf(coverageStr.trim().replace('%', ''))
+                            try {
+                                // Your pipeline code, including the coverage check
+                                if (coverage >= Double.valueOf(MIN_REQUIRED_COVERAGE)) {
+                                    echo "Coverage is ${coverage}%"
+                                } else {
+                                    error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
                                 }
+                            } catch (Exception e) {
+                                // Handle the exception and display the error message
+                                currentBuild.result = 'FAILURE'
+                                currentBuild.description = "Error: ${e.message}"
                             }
                         }
                     }
                 }
             }
         }
-    
-
-        // // Display test scratch org info.
-        // stage('Display Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:display --targetusername ${SCRATCH_ORG_ALIAS}")
-        //         }
-        //     }
-        // }
-
-        // // Push source to test scratch org.
-        // stage('Push To Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:source:push --targetusername ${SCRATCH_ORG_ALIAS}")
-        //         }
-        //     }
-        // }
-
-        // Run unit tests in test scratch org.
-        // stage('Run Tests In Scratch Org') {
-        //     steps {
-        //         script {
-        //             def apexTestFile = 'test_results/apex_results.txt'
-        //             def filePipe = '^>'
-        //             if (isUnix()) {
-        //                 filePipe = '>'
-        //             }
-        //             command('if not exist test_results mkdir test_results')
-
-        //             command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
-        //                 "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
-        //                 "--wait 10 ${filePipe} ${apexTestFile}")
-
-        //             archiveArtifacts artifacts: apexTestFile
-        //             // check coverage results
-        //             def fileContent = readFile apexTestFile
-        //             def lines = fileContent.readLines()
-
-        //             lines.each { line ->
-        //                 if (line.contains('Org Wide Coverage')) {
-        //                     def coverageStr = line.split()[3]
-        //                     def coverage = Double.valueOf(coverageStr.trim().replace('%', ''))
-        //                     try {
-        //                         // Your pipeline code, including the coverage check
-        //                         if (coverage >= Double.valueOf(MIN_REQUIRED_COVERAGE)) {
-        //                             echo "Coverage is ${coverage}%"
-        //                         } else {
-        //                             error "Coverage is below minimum threshold of ${MIN_REQUIRED_COVERAGE}"
-        //                         }
-        //                     } catch (Exception e) {
-        //                         // Handle the exception and display the error message
-        //                         currentBuild.result = 'FAILURE'
-        //                         currentBuild.description = "Error: ${e.message}"
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
         stage('Packaging') {
             when {
                 expression {
