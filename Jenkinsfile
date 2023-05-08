@@ -15,15 +15,6 @@ String command_stdout(String script) {
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
 
-@NonCPS
-def getPRLabels(String repoOwner, String repoName, String prNumber, String githubToken) {
-    def jsonSlurper = new JsonSlurper()
-    def response = command_stdout("curl -s -H 'Authorization: token ${githubToken}'" +
-        " https://api.github.com/repos/${repoOwner}/${repoName}/issues/${prNumber}")
-    def prInfo = jsonSlurper.parseText(response)
-    return prInfo.labels.collect { it.name }
-}
-
 pipeline {
     agent any
 
@@ -47,38 +38,27 @@ pipeline {
         stage('Checkout Source') {
             steps {
                 checkout scm
-                git branch: env.BRANCH_NAME, credentialsId: 'Jenkins',
+                git branch: env.BRANCH_NAME, credentialsId: 'kmorrison00-github-creds',
                  url: 'https://github.com/KMorrison00/rec-demo-housing-app'
+            }
+        }
+        stage('Run Static Code Analysis') {
+            steps {
                 script {
-                    def prLabels = getPRLabels('KMorrison00', 'rec-demo-housing-app', env.GIT_PR_NUMBER, GITHUB_TOKEN)
-                    echo "PR Labels: ${prLabels.join(', ')}"
-                    if (prLabels.contains('ready_to_package')) {
-                        env.READY_TO_PACKAGE = true
-                        echo "The PR has the 'ready_to_package' label."
-                    } else {
-                        env.READY_TO_PACKAGE = false
-                        echo "The PR does not have the 'ready_to_package' label."
-                    }
+                    // Install PMD and run static code analysis, saving the results as an XML file
+                    command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
                 }
             }
         }
-        // stage('Run Static Code Analysis') {
-        //     steps {
-        //         script {
-        //             // Install PMD and run static code analysis, saving the results as an XML file
-        //             command('pmd -d . -R rulesets/java/basic.xml -f xml > pmd-report.xml')
-        //         }
-        //     }
-        // }
 
-        // stage('Publish Static Code Analysis Results') {
-        //     steps {
-        //         script {
-        //             // Publish the PMD static code analysis results in Jenkins
-        //             recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
-        //         }
-        //     }
-        // }
+        stage('Publish Static Code Analysis Results') {
+            steps {
+                script {
+                    // Publish the PMD static code analysis results in Jenkins
+                    recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
+                }
+            }
+        }
 
         // Authorize the Dev Hub org with JWT key and give it an alias.
         stage('Authorize DevHub And Create Scratch Org') {
@@ -88,30 +68,30 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                    // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                    //         '--definitionfile config/project-scratch-def.json '+
-                    //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                    command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                            '--definitionfile config/project-scratch-def.json '+
+                            "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
         }
-        // // Display test scratch org info.
-        // stage('Display Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
-        //         }
-        //     }
-        // }
+        // Display test scratch org info.
+        stage('Display Scratch Org') {
+            steps {
+                script {
+                    command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
+                }
+            }
+        }
 
-        // // Push source to test scratch org.
-        // stage('Push To Scratch Org') {
-        //     steps {
-        //         script {
-        //             command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
-        //         }
-        //     }
-        // }
+        // Push source to test scratch org.
+        stage('Push To Scratch Org') {
+            steps {
+                script {
+                    command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
+                }
+            }
+        }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
@@ -156,11 +136,6 @@ pipeline {
         }
 
         stage('Packaging') {
-            when {
-                expression {
-                    env.READY_TO_PACKAGE
-                }
-            }
             stages {
                 // check for a package that exists so we can create or update it
                 stage('Check Package') {
@@ -214,7 +189,7 @@ pipeline {
                             def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
-                            PACKAGE_VERSION = response.result.SubscriberPackageVersionId
+                            def PACKAGE_VERSION = response.result.SubscriberPackageVersionId
 
                             echo "${PACKAGE_VERSION}"
                         }
@@ -223,14 +198,13 @@ pipeline {
             }
         }
     }
+    post {
+        always {
+            script {
+                // cleanup
+                command("sfdx force:org:delete --targetusername ${SCRATCH_ORG_ALIAS} --noprompt")
+            }
+        }
+    }
 }
-// post {
-//     always {
-//         script {
-//             // cleanup
-//             command("sfdx force:org:delete --targetusername ${SCRATCH_ORG_ALIAS} --noprompt")
-//         }
-//     }
-// }
-// }
 
