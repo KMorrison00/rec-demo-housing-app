@@ -141,13 +141,12 @@ pipeline {
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
                     echo response.toString()
-                    try {
-                        def packageExists = response.result.name == PACKAGE_NAME
-                        if (packageExists) {
-                            echo "Package exists with ID: ${response.package.Id}"
-                            env.PACKAGE_ID = response.result.Id
-                        }
-                    } catch (Exception e) {
+
+                    def packageExists = response.result.name == PACKAGE_NAME
+                    if (packageExists) {
+                        echo "Package exists with ID: ${response.package.Id}"
+                        env.PACKAGE_ID = response.result.Id
+                    } else {
                         echo "Package does not exist, ${e.message}"
                         env.PACKAGE_ID = ''
                     }
@@ -156,7 +155,7 @@ pipeline {
         }
 
         // if theres no package yet, create one
-        stage('Create Package') {
+        stage('Create New Package') {
             when {
                 expression { env.PACKAGE_ID == '' }
             }
@@ -174,7 +173,7 @@ pipeline {
         }
 
         // Create package version.
-        stage('Create Package Version') {
+        stage('Create New Package Version') {
             steps {
                 script {
                     output = command_stdout("sfdx force:package:version:create --package ${env.PACKAGE_ID}" +
