@@ -28,7 +28,6 @@ pipeline {
         SCRATCH_ORG_ALIAS = 'scratch_org'
         HUB_ORG = 'ciorg'
         MIN_REQUIRED_COVERAGE = 65.0
-        SFDX_PROJECT_PATH = '/sdfx-project.json'
     }
 
     stages {
@@ -134,6 +133,7 @@ pipeline {
                 }
             }
         }
+        // check for a package that exists so we can create or update it
         stage('Check Package') {
             steps {
                 script {
@@ -154,6 +154,8 @@ pipeline {
                 }
             }
         }
+
+        // if theres no package yet, create one
         stage('Create Package') {
             when {
                 expression { env.PACKAGE_ID == '' }
@@ -161,7 +163,7 @@ pipeline {
             steps {
                 script {
                     output = command_stdout("sfdx force:package:create --name ${PACKAGE_NAME}" +
-                        " --packagetype Unlocked --target-dev-hub ${HUB_ORG} --json")
+                        " --packagetype Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
                     echo response.toString()
@@ -176,17 +178,15 @@ pipeline {
             steps {
                 script {
                     output = command_stdout("sfdx force:package:version:create --package ${env.PACKAGE_ID}" +
-                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
+                                " --installation-key-bypass --path src --wait 10 --json --target-dev-hub ${HUB_ORG}")
 
                     // Wait 5 minutes for package replication.
                     sleep 300
 
                     def jsonSlurper = new groovy.json.JsonSlurper()
                     def response = jsonSlurper.parseText(output)
-                    echo response
+                    echo response.toString()
                     PACKAGE_VERSION = response.result.SubscriberPackageVersionId
-
-                    response = null
 
                     echo "${PACKAGE_VERSION}"
                 }
