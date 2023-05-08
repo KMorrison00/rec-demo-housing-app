@@ -133,60 +133,67 @@ pipeline {
                 }
             }
         }
-        // check for a package that exists so we can create or update it
-        stage('Check Package') {
-            steps {
-                script {
-                    def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
-                    def jsonSlurper = new groovy.json.JsonSlurper()
-                    def response = jsonSlurper.parseText(output)
-                    echo response.toString()
-                    def packageExists = response.result[0].Name == PACKAGE_NAME
-                    if (packageExists) {
-                        env.PACKAGE_ID = response.result[0].Id
-                        echo "Package exists with ID: ${env.PACKAGE_ID}"
-                    } else {
-                        echo "Package does not exist"
-                        env.PACKAGE_ID = ''
+        stage('Packaging') {
+            when {
+                expression {
+                    return pullRequest.labels.any { it == 'ready_to_package' }
+                }
+            }
+            // check for a package that exists so we can create or update it
+            stage('Check Package') {
+                steps {
+                    script {
+                        def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
+                        def jsonSlurper = new groovy.json.JsonSlurper()
+                        def response = jsonSlurper.parseText(output)
+                        echo response.toString()
+                        def packageExists = response.result[0].Name == PACKAGE_NAME
+                        if (packageExists) {
+                            env.PACKAGE_ID = response.result[0].Id
+                            echo "Package exists with ID: ${env.PACKAGE_ID}"
+                        } else {
+                            echo "Package does not exist"
+                            env.PACKAGE_ID = ''
+                        }
                     }
                 }
             }
-        }
 
-        // if theres no package yet, create one
-        stage('Create New Package') {
-            when {
-                expression { env.PACKAGE_ID == '' }
-            }
-            steps {
-                script {
-                    output = command_stdout("sfdx force:package:create --name ${PACKAGE_NAME}" +
-                        " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
-                    def jsonSlurper = new groovy.json.JsonSlurper()
-                    def response = jsonSlurper.parseText(output)
-                    echo response.toString()
-                    env.PACKAGE_ID = response.result.Id
-                    echo "Created new package with ID: ${env.PACKAGE_ID}"
+            // if theres no package yet, create one
+            stage('Create New Package') {
+                when {
+                    expression { env.PACKAGE_ID == '' }
+                }
+                steps {
+                    script {
+                        output = command_stdout("sfdx force:package:create --name ${PACKAGE_NAME}" +
+                            " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
+                        def jsonSlurper = new groovy.json.JsonSlurper()
+                        def response = jsonSlurper.parseText(output)
+                        echo response.toString()
+                        env.PACKAGE_ID = response.result.Id
+                        echo "Created new package with ID: ${env.PACKAGE_ID}"
+                    }
                 }
             }
-        }
 
-        // Create package version.
-        stage('Create New Package Version') {
-            steps {
-                script {
-                    output = command_stdout("sfdx force:package:version:create --package ${env.PACKAGE_ID}" +
-                                " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
+            // Create package version.
+            stage('Create New Package Version') {
+                steps {
+                    script {
+                        output = command_stdout("sfdx force:package:version:create --package ${env.PACKAGE_ID}" +
+                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
 
-                    // Wait 5 minutes for package replication.
-                    sleep 300
+                        // Wait 5 minutes for package replication.
+                        sleep 300
 
-                    def jsonSlurper = new groovy.json.JsonSlurper()
-                    def response = jsonSlurper.parseText(output)
-                    echo response.toString()
-                    PACKAGE_VERSION = response.result.SubscriberPackageVersionId
+                        def jsonSlurper = new groovy.json.JsonSlurper()
+                        def response = jsonSlurper.parseText(output)
+                        echo response.toString()
+                        PACKAGE_VERSION = response.result.SubscriberPackageVersionId
 
-                    echo "${PACKAGE_VERSION}"
+                        echo "${PACKAGE_VERSION}"
+                    }
                 }
             }
         }
