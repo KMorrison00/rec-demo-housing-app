@@ -178,7 +178,7 @@ pipeline {
             steps {
                 script {
                     output = command_stdout("sfdx force:package:version:create --package ${env.PACKAGE_ID}" +
-                                " --installation-key-bypass --path src --wait 10 --json --target-dev-hub ${HUB_ORG}")
+                                " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
 
                     // Wait 5 minutes for package replication.
                     sleep 300

@@ -1,11 +1,7 @@
 {
   "packageDirectories": [
     {
-      "path": "src",
-      "default": true,
-      "package": "test_package_1",
-      "versionName": "ver 0.1",
-      "versionNumber": "0.1.0.NEXT"
+      "path": "src"
     }
   ],
   "name": "rec-housing-app",
