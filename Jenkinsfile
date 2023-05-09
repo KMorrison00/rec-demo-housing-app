@@ -20,9 +20,9 @@ pipeline {
     // set credentials for all the CI steps, env variables are set in jenkins ui
     // private key is stored in credentials because its a file
     environment {
-        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY2}"
-        SF_USERNAME = "${env.SF_USERNAME2}"
-        TEST_LEVEL = 'RunLocalTests'
+        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
+        SF_USERNAME = "${env.SF_USERNAME}"
+        TEST_LEVEL = 'RunAllTestsInOrgs'
         PACKAGE_NAME = 'traction_rec_demo'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         SCRATCH_ORG_ALIAS = 'scratch_org'
@@ -134,84 +134,83 @@ pipeline {
                 }
             }
         }
+        stage('Packaging') {
+            environment {
+                PACKAGE_ID = ''
+            }
+            stages {
+                // check for a package that exists so we can create or update it
+                stage('Check Package') {
+                    steps {
+                        script {
+                            def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
+                            def jsonSlurper = new groovy.json.JsonSlurper()
+                            def response = jsonSlurper.parseText(output)
+                            echo response.toString()
+                            def packageExists = false
+                            try {
+                                echo "checking if package exists"
+                                if (response.result[0].Name == PACKAGE_NAME) {
+                                    packageExists = true
+                                }
+                                echo "Package: ${PACKAGE_NAME} Found"
+                            } catch (Exception e) {
+                                echo "Package Name not found"
+                            }
+                            if (packageExists) {
+                                // update sdfx-project.json file for later steps
+                                println "0"
+                                def sfdxProject = readJSON file: 'sfdx-project.json'
+                                println "1"
+                                sfdxProject.packageAliases.{PACKAGE_NAME} = response.result[0].Id
+                                println "2"
+                                writeJSON file: 'sfdx-project.json', json: sfdxProject
+                                println "3"
+                                PACKAGE_ID = response.result[0].Id
+                                println "4"
 
-        // stage('Packaging') {
-        //     environment {
-        //         PACKAGE_ID = ''
-        //     }
-        //     stages {
-        //         // check for a package that exists so we can create or update it
-        //         stage('Check Package') {
-        //             steps {
-        //                 script {
-        //                     def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
-        //                     def jsonSlurper = new groovy.json.JsonSlurper()
-        //                     def response = jsonSlurper.parseText(output)
-        //                     echo response.toString()
-        //                     def packageExists = false
-        //                     try {
-        //                         echo "checking if package exists"
-        //                         if (response.result[0].Name == PACKAGE_NAME) {
-        //                             packageExists = true
-        //                         }
-        //                         echo "Package: ${PACKAGE_NAME} Found"
-        //                     } catch (Exception e) {
-        //                         echo "Package Name not found"
-        //                     }
-        //                     if (packageExists) {
-        //                         // update sdfx-project.json file for later steps
-        //                         println "0"
-        //                         def sfdxProject = readJSON file: 'sfdx-project.json'
-        //                         println "1"
-        //                         sfdxProject.packageAliases.{PACKAGE_NAME} = response.result[0].Id
-        //                         println "2"
-        //                         writeJSON file: 'sfdx-project.json', json: sfdxProject
-        //                         println "3"
-        //                         PACKAGE_ID = response.result[0].Id
-        //                         println "4"
+                            } 
+                        }
+                    }
+                }
 
-        //                     } 
-        //                 }
-        //             }
-        //         }
-
-        //         // if theres no package yet, create one
-        //         stage('Create New Package') {
-        //             when {
-        //                 expression { 
-        //                     PACKAGE_ID == ''
-        //                 }
-        //             }
-        //             steps {
-        //                 script {
-        //                     output = command_stdout("sfdx package:create --name ${PACKAGE_NAME}" +
-        //                         " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
-        //                     def jsonSlurper = new groovy.json.JsonSlurper()
-        //                     def response = jsonSlurper.parseText(output)
-        //                     echo "Created new package with ID: ${response.result.Id}"
-        //                 }
-        //             }
-        //         }
-        //         // Create package version.
-        //         stage('Update Existing Package') {
-        //             when {
-        //                 expression { 
-        //                     PACKAGE_ID.contains('0Ho')
-        //                 }
-        //             }
-        //             steps {
-        //                 script {
-        //                     output = command_stdout("sfdx package:version:create --package ${env.PACKAGE_ID}" +
-        //                             " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
-        //                     def jsonSlurper = new groovy.json.JsonSlurper()
-        //                     def response = jsonSlurper.parseText(output)
-        //                     echo response.toString()
-        //                     // echo "Updated package with ID: ${response.result.Id}"
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                // if theres no package yet, create one
+                stage('Create New Package') {
+                    when {
+                        expression { 
+                            PACKAGE_ID == ''
+                        }
+                    }
+                    steps {
+                        script {
+                            output = command_stdout("sfdx package:create --name ${PACKAGE_NAME}" +
+                                " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
+                            def jsonSlurper = new groovy.json.JsonSlurper()
+                            def response = jsonSlurper.parseText(output)
+                            echo "Created new package with ID: ${response.result.Id}"
+                        }
+                    }
+                }
+                // Create package version.
+                stage('Update Existing Package') {
+                    when {
+                        expression { 
+                            PACKAGE_ID.contains('0Ho')
+                        }
+                    }
+                    steps {
+                        script {
+                            output = command_stdout("sfdx package:version:create --package ${env.PACKAGE_ID}" +
+                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
+                            def jsonSlurper = new groovy.json.JsonSlurper()
+                            def response = jsonSlurper.parseText(output)
+                            echo response.toString()
+                            // echo "Updated package with ID: ${response.result.Id}"
+                        }
+                    }
+                }
+            }
+        }
     }
     post {
         always {
