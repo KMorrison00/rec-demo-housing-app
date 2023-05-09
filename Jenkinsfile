@@ -94,7 +94,7 @@ pipeline {
                 script {
                     def filePipe = getFilePipe()
                     command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS} ${filePipe} org_details.txt")
-                    archiveArtifacts org_details.txt
+                    archiveArtifacts "org_details.txt"
                 }
             }
         }
