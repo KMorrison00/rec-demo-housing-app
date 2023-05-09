@@ -185,7 +185,7 @@ pipeline {
                 stage('Create New Package') {
                     when {
                         expression { 
-                            package_id == ''
+                            packageId == ''
                         }
                     }
                     steps {
