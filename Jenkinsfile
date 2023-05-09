@@ -7,12 +7,22 @@ String command(String script) {
     }
     return bat(returnStatus: true, script: script)
 }
-String command_stdout(String script) {
+String commandStdout(String script) {
     if (isUnix()) {
         return sh(returnStdout: true, script: script)
     }
     return bat(returnStdout: true, script: script).trim().readLines().drop(1).join(' ')
 }
+
+String getFilePipe() {
+    if (isUnix()) {
+        return '>'
+    }
+    return '^>'
+}
+
+// used for passing id between stages
+def package_id
 
 pipeline {
     agent any
@@ -20,8 +30,8 @@ pipeline {
     // set credentials for all the CI steps, env variables are set in jenkins ui
     // private key is stored in credentials because its a file
     environment {
-        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
-        SF_USERNAME = "${env.SF_USERNAME}"
+        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY2}"
+        SF_USERNAME = "${env.SF_USERNAME2}"
         TEST_LEVEL = 'RunAllTestsInOrg'
         PACKAGE_NAME = 'traction_rec_demo'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
@@ -82,7 +92,8 @@ pipeline {
         stage('Display Scratch Org') {
             steps {
                 script {
-                    command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS}")
+                    def filePipe = getFilePipe()
+                    command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS} ${filePipe} org_details.txt")
                 }
             }
         }
@@ -101,13 +112,9 @@ pipeline {
             steps {
                 script {
                     def apexTestFile = 'test_results/apex_results.txt'
-                    def filePipe = '^>'
-                    if (isUnix()) {
-                        filePipe = '>'
-                    }
                     command('if not exist test_results mkdir test_results')
-
-                    command_stdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
+                    def filePipe = getFilePipe()
+                    commandStdout("sfdx apex:run:test --target-org ${SCRATCH_ORG_ALIAS} " +
                         "--code-coverage --result-format human --test-level ${TEST_LEVEL} " +
                         "--wait 10 ${filePipe} ${apexTestFile}")
 
@@ -138,15 +145,12 @@ pipeline {
             }
         }
         stage('Packaging') {
-            environment {
-                PACKAGE_ID = ''
-            }
             stages {
                 // check for a package that exists so we can create or update it
                 stage('Check Package') {
                     steps {
                         script {
-                            def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
+                            def output = commandStdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
                             def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
@@ -160,7 +164,7 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Package Name not found"
                             }
-                            if (packageExists) {
+                            if (packageExists == true) {
                                 // update sdfx-project.json file for later steps
                                 println "0"
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
@@ -169,7 +173,7 @@ pipeline {
                                 println "2"
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
                                 println "3"
-                                PACKAGE_ID = response.result[0].Id
+                                package_id = response.result[0].Id
                                 println "4"
 
                             } 
@@ -181,12 +185,12 @@ pipeline {
                 stage('Create New Package') {
                     when {
                         expression { 
-                            PACKAGE_ID == ''
+                            package_id == ''
                         }
                     }
                     steps {
                         script {
-                            output = command_stdout("sfdx package:create --name ${PACKAGE_NAME}" +
+                            output = commandStdout("sfdx package:create --name ${PACKAGE_NAME}" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
                             def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
@@ -198,12 +202,12 @@ pipeline {
                 stage('Update Existing Package') {
                     when {
                         expression { 
-                            PACKAGE_ID.contains('0Ho')
+                            package_id.contains('0Ho')
                         }
                     }
                     steps {
                         script {
-                            output = command_stdout("sfdx package:version:create --package ${env.PACKAGE_ID}" +
+                            output = commandStdout("sfdx package:version:create --package ${package_id}" +
                                     " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
                             def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
