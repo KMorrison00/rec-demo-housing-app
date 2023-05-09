@@ -177,41 +177,38 @@ pipeline {
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
                             def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
-                            echo response.toString()
-                            env.PACKAGE_ID = response.result.Id
-                            echo "Created new package with ID: ${env.PACKAGE_ID}"
+                            echo "Created new package with ID: ${response.result.Id}"
                         }
                     }
                 }
-
                 // Create package version.
-                stage('Create New Package Version') {
+                stage('Update Existing Package') {
+                    when {
+                        expression { 
+                            env.PACKAGE_ID != ''
+                        }
+                    }
                     steps {
                         script {
                             output = command_stdout("sfdx package:version:create --package ${env.PACKAGE_ID}" +
-                                        " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
-
-                            // Wait 5 minutes for package replication.
-                            sleep 300
+                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
                             def jsonSlurper = new JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
-                            def PACKAGE_VERSION = response.result.SubscriberPackageVersionId
-
-                            echo "${PACKAGE_VERSION}"
+                            // echo "Updated package with ID: ${response.result.Id}"
                         }
                     }
                 }
             }
         }
     }
-    post {
-        always {
-            script {
-                // cleanup
-                command("sfdx force:org:delete --targetusername ${SCRATCH_ORG_ALIAS} --noprompt")
-            }
-        }
-    }
+    // post {
+    //     always {
+    //         script {
+    //             // cleanup
+    //             command("sfdx force:org:delete --targetusername ${SCRATCH_ORG_ALIAS} --noprompt")
+    //         }
+    //     }
+    // }
 }
 
