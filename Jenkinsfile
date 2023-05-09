@@ -136,6 +136,9 @@ pipeline {
 
         stage('Packaging') {
             stages {
+                environment {
+                    PACKAGE_ID = ''
+                }
                 // check for a package that exists so we can create or update it
                 stage('Check Package') {
                     steps {
@@ -147,11 +150,12 @@ pipeline {
                             def packageExists = false
                             try {
                                 echo "checking if package exists"
-                                packageExists = response.result[0].Name == PACKAGE_NAME
+                                if (response.result[0].Name == PACKAGE_NAME) {
+                                    packageExists = true
+                                }
                                 echo "Package: ${PACKAGE_NAME} Found"
                             } catch (Exception e) {
                                 echo "Package Name not found"
-                                env.PACKAGE_ID = ''
                             }
                             if (packageExists) {
                                 // update sdfx-project.json file for later steps
@@ -162,7 +166,7 @@ pipeline {
                                 println "2"
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
                                 println "3"
-                                env.PACKAGE_ID = response.result[0].Id
+                                PACKAGE_ID = response.result[0].Id
                                 println "4"
 
                             } 
@@ -174,7 +178,7 @@ pipeline {
                 stage('Create New Package') {
                     when {
                         expression { 
-                            env.PACKAGE_ID == ''
+                            PACKAGE_ID == ''
                         }
                     }
                     steps {
@@ -191,7 +195,7 @@ pipeline {
                 stage('Update Existing Package') {
                     when {
                         expression { 
-                            env.PACKAGE_ID.contains('0Ho')
+                            PACKAGE_ID.contains('0Ho')
                         }
                     }
                     steps {
