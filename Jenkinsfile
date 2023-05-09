@@ -205,7 +205,7 @@ pipeline {
                         script {
                             def filePipe = getFilePipe()
                             output = commandStdout("sfdx package:version:create --package ${packageId}" +
-                                    " --installation-key-bypass --wait 10 --target-dev-hub ${HUB_ORG} ${filePipe} test.txt")
+                                    " --installation-key-bypass --wait 10 --target-dev-hub ${HUB_ORG} ${filePipe} test.txt 2>&1")
                             archiveArtifacts "test.txt"
                             // def response = readJSON text: output
                             echo response.toString()
