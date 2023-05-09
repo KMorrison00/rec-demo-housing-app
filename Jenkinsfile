@@ -198,7 +198,7 @@ pipeline {
                     }
                 }
                 // Create package version.
-                stage('Update Existing Package') {
+                stage('Create Package version') {
                     when {
                         expression { 
                             packageId.contains('0Ho')
@@ -208,7 +208,7 @@ pipeline {
                         script {
                             output = commandStdout("sfdx force:package:version:create --package ${packageId}" +
                                     " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}" + 
-                                    "--definitionfile config/project-scratch-def.json")
+                                    " --definitionfile config/project-scratch-def.json")
                             def response = readJSON text: output
                             echo response.toString()
                             // echo "Updated package with ID: ${response.result.Id}"
