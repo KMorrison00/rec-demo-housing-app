@@ -172,7 +172,7 @@ pipeline {
                                 // update sdfx-project.json file for later steps
                                 packageId = response.result[0].Id
                                 println "1"
-                                sfdxProject.packageAliases.packageName = packageId
+                                sfdxProject.packageAliases[packageName] = packageId
                                 println "2"
                                 echo sfdxProject.toString()
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
