@@ -7,7 +7,7 @@
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-
+  "packageAliases": {},
   "name": "rec-housing-app",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
