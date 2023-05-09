@@ -21,8 +21,9 @@ String getFilePipe() {
     return '^>'
 }
 
-// used for passing id between stages
+// used for passing package data between stages
 String packageId  = ''
+String packageName = ''
 
 pipeline {
     agent any
@@ -155,7 +156,7 @@ pipeline {
                             echo response.toString()
                             def packageExists = false
                             def sfdxProject = readJSON file: 'sfdx-project.json'
-                            def packageName = sfdxProject.packageDirectories[0].package
+                            packageName = sfdxProject.packageDirectories[0].package
                             try {
                                 echo "checking if package exists"
                                 if (response.result[0].Name == packageName) {
@@ -190,7 +191,7 @@ pipeline {
                     }
                     steps {
                         script {
-                            output = commandStdout("sfdx package:create" +
+                            output = commandStdout("sfdx package:create --name ${packageName}" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
                             def response = readJSON text: output
                             echo "Created new package with ID: ${response.result.Id}"
