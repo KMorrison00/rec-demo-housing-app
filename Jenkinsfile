@@ -22,7 +22,7 @@ pipeline {
     environment {
         SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
         SF_USERNAME = "${env.SF_USERNAME}"
-        TEST_LEVEL = 'RunAllTestsInOrgs'
+        TEST_LEVEL = 'RunAllTestsInOrg'
         PACKAGE_NAME = 'traction_rec_demo'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         SCRATCH_ORG_ALIAS = 'scratch_org'
@@ -51,10 +51,10 @@ pipeline {
             }
         }
 
+        // Publish the PMD static code analysis results in Jenkins viewable via warnings extension
         stage('Publish Static Code Analysis Results') {
             steps {
                 script {
-                    // Publish the PMD static code analysis results in Jenkins
                     recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
                 }
             }
@@ -68,9 +68,12 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                    command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                            '--definitionfile config/project-scratch-def.json '+
-                            "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                        // delete old scratch org 
+                        command("sfdx force:org:delete --target-dev-hub ${SCRATCH_ORG_ALIAS} --noprompt")
+                        // create new one
+                        command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                                '--definitionfile config/project-scratch-def.json '+
+                                "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
@@ -209,14 +212,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-    }
-    post {
-        always {
-            script {
-                // cleanup
-                command("sfdx force:org:delete --targetusername ${SCRATCH_ORG_ALIAS} --noprompt")
             }
         }
     }
