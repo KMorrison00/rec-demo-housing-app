@@ -57,7 +57,7 @@ pipeline {
                     recordIssues tool: pmdParser(pattern: 'pmd-report.xml')
                 }
             }
-        // }
+        }
 
         // Authorize the Dev Hub org with JWT key and give it an alias.
         stage('Authorize DevHub And Create Scratch Org') {
@@ -221,4 +221,3 @@ pipeline {
         }
     }
 }
-
