@@ -31,8 +31,8 @@ pipeline {
     // set credentials for all the CI steps, env variables are set in jenkins ui
     // private key is stored in credentials because its a file
     environment {
-        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY2}"
-        SF_USERNAME = "${env.SF_USERNAME2}"
+        SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY}"
+        SF_USERNAME = "${env.SF_USERNAME}"
         TEST_LEVEL = 'RunAllTestsInOrg'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         SCRATCH_ORG_ALIAS = 'scratch_org'
@@ -154,7 +154,7 @@ pipeline {
                             def output = commandStdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
                             def response = readJSON text: output
                             echo response.toString()
-                            def packageExists = false
+                            def packageExists = false 
                             def sfdxProject = readJSON file: 'sfdx-project.json'
                             packageName = sfdxProject.packageDirectories[0].package
                             try {
