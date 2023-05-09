@@ -171,13 +171,8 @@ pipeline {
                                 echo "updating sdfx-project.json with alias ${packageName}"
                                 // update sdfx-project.json file for later steps
                                 packageId = response.result[0].Id
-                                println "1"
                                 sfdxProject.packageAliases[packageName] = packageId
-                                println "2"
-                                echo sfdxProject.toString()
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
-                                echo packageId
-
                             } 
                         }
                     }
@@ -208,9 +203,11 @@ pipeline {
                     }
                     steps {
                         script {
+                            def filePipe = getFilePipe()
                             output = commandStdout("sfdx package:version:create --package ${packageId}" +
-                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
+                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG} ${filePipe} test.txt")
                             def response = readJSON text: output
+                            archiveArtifacts "test.txt"
                             echo response.toString()
                             // echo "Updated package with ID: ${response.result.Id}"
                         }
