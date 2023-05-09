@@ -22,7 +22,7 @@ String getFilePipe() {
 }
 
 // used for passing id between stages
-String package_id  = ''
+String packageId  = ''
 
 pipeline {
     agent any
@@ -33,7 +33,6 @@ pipeline {
         SF_CONSUMER_KEY = "${env.SF_CONSUMER_KEY2}"
         SF_USERNAME = "${env.SF_USERNAME2}"
         TEST_LEVEL = 'RunAllTestsInOrg'
-        PACKAGE_NAME = 'traction_rec_demo'
         SF_INSTANCE_URL = "${env.SF_INSTANCE_URL}"
         SCRATCH_ORG_ALIAS = 'scratch_org'
         HUB_ORG = 'ciorg'
@@ -156,28 +155,27 @@ pipeline {
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
                             def packageExists = false
+                            def sfdxProject = readJSON file: 'sfdx-project.json'
+                            def packageName = sfdxProject.packageDirectories[0].package
                             try {
                                 echo "checking if package exists"
-                                if (response.result[0].Name == PACKAGE_NAME) {
+                                if (response.result[0].Name == packageName) {
                                     packageExists = true
-                                echo "Package: ${PACKAGE_NAME} Found"
+                                echo "Package: ${packageName} Found"
                                 }
                             } catch (Exception e) {
                                 echo "Package Name not found"
                             }
-                            echo "${packageExists}"
+                            echo "package exists: ${packageExists}"
                             if (packageExists == true) {
-                                echo "updating sdfx-project.json with ${response.result[0].Id}"
+                                echo "updating sdfx-project.json with alias ${packageName}"
                                 // update sdfx-project.json file for later steps
-                                println "0"
-                                def sfdxProject = readJSON file: 'sfdx-project.json'
+                                packageId = response.result[0].Id
                                 println "1"
-                                sfdxProject.packageAliases.{PACKAGE_NAME} = response.result[0].Id
+                                sfdxProject.packageAliases.{packageName} = packageId
                                 println "2"
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
-                                println "3"
-                                package_id = response.result[0].Id
-                                echo package_id
+                                echo packageId
 
                             } 
                         }
@@ -193,7 +191,7 @@ pipeline {
                     }
                     steps {
                         script {
-                            output = commandStdout("sfdx package:create --name ${PACKAGE_NAME}" +
+                            output = commandStdout("sfdx package:create" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
                             def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
@@ -205,12 +203,12 @@ pipeline {
                 stage('Update Existing Package') {
                     when {
                         expression { 
-                            package_id.contains('0Ho')
+                            packageId.contains('0Ho')
                         }
                     }
                     steps {
                         script {
-                            output = commandStdout("sfdx package:version:create --package ${package_id}" +
+                            output = commandStdout("sfdx package:version:create --package ${packageId}" +
                                     " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
                             def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
