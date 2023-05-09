@@ -159,9 +159,12 @@ pipeline {
                             packageName = sfdxProject.packageDirectories[0].package
                             try {
                                 echo "checking if package exists"
-                                if (response.result[0].Name == packageName) {
-                                    packageExists = true
-                                echo "Package: ${packageName} Found"
+                                for (package in response.result) {
+                                    if (package.Name == packageName) {
+                                        packageExists = true
+                                        echo "Package: ${packageName} Found"
+                                }
+                                
                                 }
                             } catch (Exception e) {
                                 echo "Package Name not found"
@@ -204,8 +207,8 @@ pipeline {
                     steps {
                         script {
                             def filePipe = getFilePipe()
-                            output = commandStdout("sfdx package:version:create --package ${packageId}" +
-                                    " --installation-key-bypass --wait 10 --target-dev-hub ${HUB_ORG} ${filePipe} test.txt 2>&1")
+                            output = commandStdout("sfdx force:package:version:create --package ${packageId}" +
+                                    " --installation-key-bypass --wait 10 --target-dev-hub ${HUB_ORG} ${filePipe} test.txt")
                             archiveArtifacts "test.txt"
                             // def response = readJSON text: output
                             echo response.toString()
