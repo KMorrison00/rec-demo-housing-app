@@ -146,27 +146,25 @@ pipeline {
                             echo response.toString()
                             def packageExists = false
                             try {
+                                echo "checking if package exists"
                                 packageExists = response.result[0].Name == PACKAGE_NAME
+                                echo "Package: ${PACKAGE_NAME} Found"
                             } catch (Exception e) {
                                 echo "Package Name not found"
                                 env.PACKAGE_ID = ''
                             }
                             if (packageExists) {
                                 // update sdfx-project.json file for later steps
-                                // these commands are broken
-                                try {
-
+                                println "0"
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
-                                echo "1"
+                                println "1"
                                 sfdxProject.packageAliases.{PACKAGE_NAME} = response.result[0].Id
-                                echo "2"
+                                println "2"
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
-                                echo "3"
+                                println "3"
                                 env.PACKAGE_ID = response.result[0].Id
-                                echo "4"
-                                } catch (Exception e) {
-                                    echo e
-                                }
+                                println "4"
+
                             } 
                         }
                     }
@@ -193,7 +191,7 @@ pipeline {
                 stage('Update Existing Package') {
                     when {
                         expression { 
-                            env.PACKAGE_ID != ''
+                            env.PACKAGE_ID.contains('0Ho')
                         }
                     }
                     steps {
