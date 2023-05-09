@@ -151,8 +151,7 @@ pipeline {
                     steps {
                         script {
                             def output = commandStdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
-                            def jsonSlurper = new groovy.json.JsonSlurper()
-                            def response = jsonSlurper.parseText(output)
+                            def response = readJSON text: output
                             echo response.toString()
                             def packageExists = false
                             def sfdxProject = readJSON file: 'sfdx-project.json'
@@ -193,8 +192,7 @@ pipeline {
                         script {
                             output = commandStdout("sfdx package:create" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
-                            def jsonSlurper = new groovy.json.JsonSlurper()
-                            def response = jsonSlurper.parseText(output)
+                            def response = readJSON text: output
                             echo "Created new package with ID: ${response.result.Id}"
                         }
                     }
@@ -210,8 +208,7 @@ pipeline {
                         script {
                             output = commandStdout("sfdx package:version:create --package ${packageId}" +
                                     " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
-                            def jsonSlurper = new groovy.json.JsonSlurper()
-                            def response = jsonSlurper.parseText(output)
+                            def response = readJSON text: output
                             echo response.toString()
                             // echo "Updated package with ID: ${response.result.Id}"
                         }
