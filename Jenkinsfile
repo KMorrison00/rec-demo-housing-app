@@ -1,5 +1,4 @@
 #!/usr/bin/env groovy
-import groovy.json.JsonSlurper
 
 // helper functions to be OS agnostic
 String command(String script) {
@@ -142,7 +141,7 @@ pipeline {
                     steps {
                         script {
                             def output = command_stdout("sfdx force:package:list --target-dev-hub ${HUB_ORG} --json")
-                            def jsonSlurper = new JsonSlurper()
+                            def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
                             def packageExists = false
@@ -153,11 +152,11 @@ pipeline {
                                 env.PACKAGE_ID = ''
                             }
                             if (packageExists) {
-                                env.PACKAGE_ID = response.result[0].Id
                                 // update sdfx-project.json file for later steps
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
-                                sfdxProject.packageAliases.TractionRecDemo = env.PACKAGE_ID
+                                sfdxProject.packageAliases.TractionRecDemo = response.result[0].Id
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
+                                env.PACKAGE_ID = response.result[0].Id
                             } 
                         }
                     }
@@ -174,7 +173,7 @@ pipeline {
                         script {
                             output = command_stdout("sfdx package:create --name ${PACKAGE_NAME}" +
                                 " --package-type Unlocked --target-dev-hub ${HUB_ORG} --path src --json")
-                            def jsonSlurper = new JsonSlurper()
+                            def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo "Created new package with ID: ${response.result.Id}"
                         }
@@ -191,7 +190,7 @@ pipeline {
                         script {
                             output = command_stdout("sfdx package:version:create --package ${env.PACKAGE_ID}" +
                                     " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
-                            def jsonSlurper = new JsonSlurper()
+                            def jsonSlurper = new groovy.json.JsonSlurper()
                             def response = jsonSlurper.parseText(output)
                             echo response.toString()
                             // echo "Updated package with ID: ${response.result.Id}"
