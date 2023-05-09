@@ -22,7 +22,7 @@ String getFilePipe() {
 }
 
 // used for passing id between stages
-def package_id
+String package_id  = ''
 
 pipeline {
     agent any
@@ -78,12 +78,12 @@ pipeline {
                         command("sfdx force:auth:jwt:grant --instance-url ${SF_INSTANCE_URL} --client-id" +
                             " ${SF_CONSUMER_KEY} --username ${SF_USERNAME} --jwt-key-file ${server_key_file}" +
                             " --set-default-dev-hub --alias ${HUB_ORG}")
-                        // delete old scratch org 
-                        command("sfdx force:org:delete --target-dev-hub ${SCRATCH_ORG_ALIAS} --noprompt")
-                        // create new one
-                        command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
-                                '--definitionfile config/project-scratch-def.json '+
-                                "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
+                        // // delete old scratch org 
+                        // command("sfdx force:org:delete --target-dev-hub ${SCRATCH_ORG_ALIAS} --noprompt")
+                        // // create new one
+                        // command("sfdx force:org:create --target-dev-hub ${HUB_ORG} "+
+                        //         '--definitionfile config/project-scratch-def.json '+
+                        //         "--setalias ${SCRATCH_ORG_ALIAS} --wait 10 --durationdays 1")
                     }
                 }
             }
@@ -94,18 +94,19 @@ pipeline {
                 script {
                     def filePipe = getFilePipe()
                     command("sfdx force:org:display --target-org ${SCRATCH_ORG_ALIAS} ${filePipe} org_details.txt")
+                    archiveArtifacts org_details.txt
                 }
             }
         }
 
-        // Push source to test scratch org.
-        stage('Push To Scratch Org') {
-            steps {
-                script {
-                    command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
-                }
-            }
-        }
+        // // Push source to test scratch org.
+        // stage('Push To Scratch Org') {
+        //     steps {
+        //         script {
+        //             command("sfdx force:source:push --target-org ${SCRATCH_ORG_ALIAS}")
+        //         }
+        //     }
+        // }
 
         // Run unit tests in test scratch org.
         stage('Run Tests In Scratch Org') {
@@ -159,12 +160,14 @@ pipeline {
                                 echo "checking if package exists"
                                 if (response.result[0].Name == PACKAGE_NAME) {
                                     packageExists = true
-                                }
                                 echo "Package: ${PACKAGE_NAME} Found"
+                                }
                             } catch (Exception e) {
                                 echo "Package Name not found"
                             }
+                            echo packageExists
                             if (packageExists == true) {
+                                echo "updating sdfx-project.json with ${response.result[0].Id}"
                                 // update sdfx-project.json file for later steps
                                 println "0"
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
@@ -174,7 +177,7 @@ pipeline {
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
                                 println "3"
                                 package_id = response.result[0].Id
-                                println "4"
+                                echo package_id
 
                             } 
                         }
