@@ -135,10 +135,10 @@ pipeline {
         }
 
         stage('Packaging') {
+            environment {
+                PACKAGE_ID = ''
+            }
             stages {
-                environment {
-                    PACKAGE_ID = ''
-                }
                 // check for a package that exists so we can create or update it
                 stage('Check Package') {
                     steps {
