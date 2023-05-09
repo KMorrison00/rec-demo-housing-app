@@ -165,7 +165,7 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Package Name not found"
                             }
-                            echo packageExists
+                            echo "${packageExist}"
                             if (packageExists == true) {
                                 echo "updating sdfx-project.json with ${response.result[0].Id}"
                                 // update sdfx-project.json file for later steps
