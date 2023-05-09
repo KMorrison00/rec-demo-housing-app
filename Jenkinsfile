@@ -206,11 +206,9 @@ pipeline {
                     }
                     steps {
                         script {
-                            def filePipe = getFilePipe()
                             output = commandStdout("sfdx force:package:version:create --package ${packageId}" +
-                                    " --installation-key-bypass --wait 10 --target-dev-hub ${HUB_ORG} ${filePipe} test.txt")
-                            archiveArtifacts "test.txt"
-                            // def response = readJSON text: output
+                                    " --installation-key-bypass --wait 10 --json --target-dev-hub ${HUB_ORG}")
+                            def response = readJSON text: output
                             echo response.toString()
                             // echo "Updated package with ID: ${response.result.Id}"
                         }
