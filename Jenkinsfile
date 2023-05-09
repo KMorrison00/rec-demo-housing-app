@@ -154,6 +154,7 @@ pipeline {
                             if (packageExists) {
                                 // update sdfx-project.json file for later steps
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
+                                echo sdfxProject.toString()
                                 sfdxProject.packageAliases.TractionRecDemo = response.result[0].Id
                                 writeJSON file: 'sfdx-project.json', json: sfdxProject
                                 env.PACKAGE_ID = response.result[0].Id
