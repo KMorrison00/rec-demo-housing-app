@@ -154,7 +154,6 @@ pipeline {
                             }
                             if (packageExists) {
                                 env.PACKAGE_ID = response.result[0].Id
-                                echo "Package exists with ID: ${env.PACKAGE_ID}"
                                 // update sdfx-project.json file for later steps
                                 def sfdxProject = readJSON file: 'sfdx-project.json'
                                 sfdxProject.packageAliases.TractionRecDemo = env.PACKAGE_ID
