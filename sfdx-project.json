@@ -2,7 +2,7 @@
   "packageDirectories": [
     {
       "path": "src",
-      "package": "TractionRecDemo",
+      "package": "rec-housing-app",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
