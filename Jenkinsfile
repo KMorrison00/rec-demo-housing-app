@@ -159,11 +159,11 @@ pipeline {
                             packageName = sfdxProject.packageDirectories[0].package
                             try {
                                 echo "checking if package exists"
-                                for (package in response.result) {
-                                    if (package.Name == packageName) {
+                                for (def pkg in response.result) {
+                                    if (pkg.Name == packageName) {
                                         packageExists = true
                                         echo "Package: ${packageName} Found"
-                                }
+                                    }
                                 
                                 }
                             } catch (Exception e) {
