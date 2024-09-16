@@ -2,11 +2,15 @@
   "packageDirectories": [
     {
       "path": "src",
-      "default": true
+      "package": "recHousingPackage2",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT"
     }
   ],
+  "packageAliases": {},
   "name": "rec-housing-app",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "57.0"
+  "sourceApiVersion": "57.0",
+  "oauthLocalPort": 1717
 }
